@@ -1,5 +1,5 @@
 require 'pcap'
-require 'getopts'
+require 'optparse'
 
 def pcaplet_usage()
   $stderr.print <<END
@@ -22,17 +22,27 @@ module Pcap
 
     def initialize(args = nil)
       if args
-	ARGV[0,0] = args.split(/\s+/)
+        ARGV[0,0] = args.split(/\s+/)
       end
-      usage(1) unless getopts("dnv", "i:", "r:", "c:-1", "s:68")
-      $DEBUG   |= $OPT_d
-      $VERBOSE |= $OPT_v
-
-      @device = $OPT_i
-      @rfile = $OPT_r
-      Pcap.convert = !$OPT_n
-      @count   = $OPT_c.to_i
-      @snaplen = $OPT_s.to_i
+      @device = nil
+      @rfile = nil
+      @count = -1
+      @snaplen = 68
+      opts = OptionParser.new do |opts|
+        opts.on('-d') {$DEBUG = true}
+        opts.on('-v') {$VERBOSE = true}
+        opts.on('-n') {Pcap.convert = false}
+        opts.on('-i IFACE') {|s| @device = s}
+        opts.on('-r FILE') {|s| @rfile = s}
+        opts.on('-c COUNT', OptionParser::DecimalInteger) {|i| @count = i}
+        opts.on('-s LEN', OptionParser::DecimalInteger) {|i| @snaplen = i}
+      end
+      begin
+        opts.parse!
+      rescue
+        usage(1)
+      end
+      
       @filter = ARGV.join(' ')
 
       # check option consistency

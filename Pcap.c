@@ -54,6 +54,29 @@ pcap_s_lookupdev(self)
 }
 
 static VALUE
+pcap_s_findalldevs(self)
+    VALUE self;
+{
+    pcap_if_t *alldevsp;
+    VALUE return_ary;
+    char pcap_errbuf[PCAP_ERRBUF_SIZE];
+
+    return_ary = rb_ary_new();
+
+    pcap_findalldevs(&alldevsp, pcap_errbuf);
+
+    if (alldevsp == NULL) // List is empty, probably an error
+           rb_raise(ePcapError, "%s", pcap_errbuf);
+    
+    for (; alldevsp->next != NULL; alldevsp = alldevsp->next)
+            rb_ary_push(return_ary, rb_str_new2(alldevsp->name));
+
+    pcap_freealldevs(alldevsp);
+    
+    return return_ary;
+}
+
+static VALUE
 pcap_s_lookupnet(self, dev)
     VALUE self;
     VALUE dev;
@@ -796,6 +819,7 @@ Init_pcap(void)
     /* define module Pcap */
     mPcap = rb_define_module("Pcap");
     rb_define_module_function(mPcap, "lookupdev", pcap_s_lookupdev, 0);
+    rb_define_module_function(mPcap, "findalldevs", pcap_s_findalldevs, 0);
     rb_define_module_function(mPcap, "lookupnet", pcap_s_lookupnet, 1);
     rb_global_variable(&rbpcap_convert);
     rb_define_singleton_method(mPcap, "convert?", pcap_s_convert, 0);
@@ -855,11 +879,7 @@ Init_pcap(void)
     /*rb_define_method(cFilter, "&", filter_and, 1);*/
 
     /* define class PcapStat */
-    cPcapStat = rb_funcall(rb_cStruct, rb_intern("new"), 4,
-                           Qnil,
-                           ID2SYM(rb_intern("recv")),
-                           ID2SYM(rb_intern("drop")),
-                           ID2SYM(rb_intern("ifdrop")));
+    cPcapStat = rb_struct_define(NULL, "recv", "drop", "ifdrop", NULL);
     rb_define_const(mPcap, "Stat", cPcapStat);
 
     /* define exception classes */

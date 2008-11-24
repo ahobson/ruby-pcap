@@ -29,11 +29,12 @@
 #include <netdb.h>
 
 #ifdef DEBUG
-# define DEBUG_PRINT(x) \
+# define DEBUG_PRINT(x) do {\
     ((RTEST(ruby_debug) && RTEST(ruby_verbose))?\
-    (fprintf(stderr, "%s\n", x),fflush(stderr)) : 0)
+    (fprintf(stderr, "%s\n", x),fflush(stderr)) : 0)\
+} while (0)
 #else
-# define DEBUG_PRINT(x) (0)
+# define DEBUG_PRINT(x) do {} while (0)
 #endif
 
 #define UINT32_2_NUM(i) rb_uint2inum(i)
