@@ -9,9 +9,9 @@
 #include "ruby_pcap.h"
 #include <limits.h>
 
-#define UDP_HDR(pkt)	((struct udphdr *)LAYER4_HDR(pkt))
-#define UDP_DATA(pkt)	((u_char *)LAYER5_HDR(pkt))
-#define UDP_LENGTH(pkt)	(ntohs(UDP_HDR(pkt)->uh_ulen))
+#define UDP_HDR(pkt)    ((struct udphdr *)LAYER4_HDR(pkt))
+#define UDP_DATA(pkt)   ((u_char *)LAYER5_HDR(pkt))
+#define UDP_LENGTH(pkt) (ntohs(UDP_HDR(pkt)->uh_ulen))
 
 VALUE cUDPPacket;
 
@@ -29,15 +29,15 @@ setup_udp_packet(pkt, tl_len)
 
     class = cUDPPacket;
     if (tl_len > 8) {
-	int hl = 8;
-	int layer5_len;
+        int hl = 8;
+        int layer5_len;
 
-	tl_len = MIN(tl_len, UDP_LENGTH(pkt));
-	layer5_len = tl_len - hl;
-	if (layer5_len > 0) {
-	    pkt->hdr.layer5_off = pkt->hdr.layer4_off + hl;
-	    /* upper layer */
-	}
+        tl_len = MIN(tl_len, UDP_LENGTH(pkt));
+        layer5_len = tl_len - hl;
+        if (layer5_len > 0) {
+            pkt->hdr.layer5_off = pkt->hdr.layer4_off + hl;
+            /* upper layer */
+        }
     }
     return class;
 }

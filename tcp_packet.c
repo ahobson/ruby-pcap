@@ -9,8 +9,8 @@
 #include "ruby_pcap.h"
 #include <limits.h>
 
-#define TCP_HDR(pkt)	((struct tcphdr *)LAYER4_HDR(pkt))
-#define TCP_DATA(pkt)	((u_char *)LAYER5_HDR(pkt))
+#define TCP_HDR(pkt)    ((struct tcphdr *)LAYER4_HDR(pkt))
+#define TCP_DATA(pkt)   ((u_char *)LAYER5_HDR(pkt))
 #define TCP_DATALEN(pkt) (ntohs(IP_HDR(pkt)->ip_len) - \
     (IP_HDR(pkt)->ip_hl + TCP_HDR(pkt)->th_off) * 4)
 
@@ -30,12 +30,12 @@ setup_tcp_packet(pkt, tl_len)
 
     class = cTCPPacket;
     if (tl_len > 20) {
-	int hl = TCP_HDR(pkt)->th_off * 4;
-	int layer5_len = tl_len - hl;
-	if (layer5_len > 0) {
-	    pkt->hdr.layer5_off = pkt->hdr.layer4_off + hl;
-	    /* upper layer */
-	}
+        int hl = TCP_HDR(pkt)->th_off * 4;
+        int layer5_len = tl_len - hl;
+        if (layer5_len > 0) {
+            pkt->hdr.layer5_off = pkt->hdr.layer4_off + hl;
+            /* upper layer */
+        }
     }
     return class;
 }

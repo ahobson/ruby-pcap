@@ -12,10 +12,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define DEFAULT_DATALINK	DLT_EN10MB
-#define DEFAULT_SNAPLEN	68
-#define DEFAULT_PROMISC	1
-#define DEFAULT_TO_MS	1000
+#define DEFAULT_DATALINK        DLT_EN10MB
+#define DEFAULT_SNAPLEN 68
+#define DEFAULT_PROMISC 1
+#define DEFAULT_TO_MS   1000
 static char pcap_errbuf[PCAP_ERRBUF_SIZE];
 
 VALUE mPcap, rbpcap_convert = Qnil;
@@ -48,7 +48,7 @@ pcap_s_lookupdev(self)
 
     dev = pcap_lookupdev(pcap_errbuf);
     if (dev == NULL) {
-	rb_raise(ePcapError, "%s", pcap_errbuf);
+        rb_raise(ePcapError, "%s", pcap_errbuf);
     }
     return rb_str_new2(dev);
 }
@@ -63,7 +63,7 @@ pcap_s_lookupnet(self, dev)
 
     Check_Type(dev, T_STRING);
     if (pcap_lookupnet(STR2CSTR(dev), &net, &mask, pcap_errbuf) == -1) {
-	rb_raise(ePcapError, "%s", pcap_errbuf);
+        rb_raise(ePcapError, "%s", pcap_errbuf);
     }
 
     addr.s_addr = net;
@@ -91,9 +91,9 @@ pcap_s_convert_set(self, val)
  */
 
 struct capture_object {
-    pcap_t	*pcap;
-    bpf_u_int32	netmask;
-    int		dl_type;	/* data-link type (DLT_*)		*/
+    pcap_t      *pcap;
+    bpf_u_int32 netmask;
+    int         dl_type;        /* data-link type (DLT_*)               */
 };
 
 static void
@@ -114,10 +114,10 @@ free_capture(cap)
 {
     DEBUG_PRINT("free_capture");
     if (cap->pcap != NULL) {
-	DEBUG_PRINT("closing capture");
-	rb_thread_fd_close(pcap_fileno(cap->pcap));
-	pcap_close(cap->pcap);
-	cap->pcap = NULL;
+        DEBUG_PRINT("closing capture");
+        rb_thread_fd_close(pcap_fileno(cap->pcap));
+        pcap_close(cap->pcap);
+        cap->pcap = NULL;
     }
     free(cap);
 }
@@ -141,46 +141,46 @@ capture_open_live(argc, argv, class)
 
     /* scan arg */
     rs = rb_scan_args(argc, argv, "13", &v_device, &v_snaplen,
-		      &v_promisc, &v_to_ms);
+                      &v_promisc, &v_to_ms);
 
     /* device */
     Check_SafeStr(v_device);
     device = RSTRING(v_device)->ptr;
     /* snaplen */
     if (rs >= 2) {
-	Check_Type(v_snaplen, T_FIXNUM);
-	snaplen = FIX2INT(v_snaplen);
+        Check_Type(v_snaplen, T_FIXNUM);
+        snaplen = FIX2INT(v_snaplen);
     } else {
-	snaplen = DEFAULT_SNAPLEN;
+        snaplen = DEFAULT_SNAPLEN;
     }
     if (snaplen <  0)
-	rb_raise(rb_eArgError, "invalid snaplen");
+        rb_raise(rb_eArgError, "invalid snaplen");
     /* promisc */
     if (rs >= 3) {
-	promisc = RTEST(v_promisc);
+        promisc = RTEST(v_promisc);
     } else {
-	promisc = DEFAULT_PROMISC;
+        promisc = DEFAULT_PROMISC;
     }
     /* to_ms */
     if (rs >= 4) {
-	Check_Type(v_to_ms, T_FIXNUM);
-	to_ms = FIX2INT(v_to_ms);
+        Check_Type(v_to_ms, T_FIXNUM);
+        to_ms = FIX2INT(v_to_ms);
     } else
-	to_ms = DEFAULT_TO_MS;
+        to_ms = DEFAULT_TO_MS;
 
     /* open */
     pcap = pcap_open_live(device, snaplen, promisc, to_ms, pcap_errbuf);
     if (pcap == NULL) {
-	rb_raise(ePcapError, "%s", pcap_errbuf);
+        rb_raise(ePcapError, "%s", pcap_errbuf);
     }
     if (pcap_lookupnet(device, &net, &netmask, pcap_errbuf) == -1) {
-	netmask = 0;
-	rb_warning("cannot lookup net: %s\n", pcap_errbuf);
+        netmask = 0;
+        rb_warning("cannot lookup net: %s\n", pcap_errbuf);
     }
 
     /* setup instance */
     self = Data_Make_Struct(class, struct capture_object,
-			    0, free_capture, cap);
+                            0, free_capture, cap);
     cap->pcap = pcap;
     cap->netmask = netmask;
     cap->dl_type = pcap_datalink(pcap);
@@ -203,12 +203,12 @@ capture_open_offline(class, fname)
     Check_SafeStr(fname);
     pcap = pcap_open_offline(RSTRING(fname)->ptr, pcap_errbuf);
     if (pcap == NULL) {
-	rb_raise(ePcapError, "%s", pcap_errbuf);
+        rb_raise(ePcapError, "%s", pcap_errbuf);
     }
 
     /* setup instance */
     self = Data_Make_Struct(class, struct capture_object,
-			    0, free_capture, cap);
+                            0, free_capture, cap);
     cap->pcap = pcap;
     cap->netmask = 0;
     cap->dl_type = pcap_datalink(pcap);
@@ -303,16 +303,16 @@ capture_dispatch(argc, argv, self)
 
     /* scan arg */
     if (rb_scan_args(argc, argv, "01", &v_cnt) >= 1) {
-	FIXNUM_P(v_cnt);
-	cnt = FIX2INT(v_cnt);
+        FIXNUM_P(v_cnt);
+        cnt = FIX2INT(v_cnt);
     } else
-	cnt = -1;
+        cnt = -1;
 
     TRAP_BEG;
     ret = pcap_dispatch(cap->pcap, cnt, handler, (u_char *)cap);
     TRAP_END;
     if (ret == -1)
-	rb_raise(ePcapError, "dispatch: %s", pcap_geterr(cap->pcap));
+        rb_raise(ePcapError, "dispatch: %s", pcap_geterr(cap->pcap));
 
     return INT2FIX(ret);
 }
@@ -336,10 +336,10 @@ capture_loop(argc, argv, self)
 
     /* scan arg */
     if (rb_scan_args(argc, argv, "01", &v_cnt) >= 1) {
-	FIXNUM_P(v_cnt);
-	cnt = FIX2INT(v_cnt);
+        FIXNUM_P(v_cnt);
+        cnt = FIX2INT(v_cnt);
     } else
-	cnt = -1;
+        cnt = -1;
 
 #if 0
     TRAP_BEG;
@@ -347,35 +347,35 @@ capture_loop(argc, argv, self)
     TRAP_END;
 #else
     if (pcap_file(cap->pcap) != NULL) {
-	TRAP_BEG;
-	ret = pcap_loop(cap->pcap, cnt, handler, (u_char *)cap);
-	TRAP_END;
+        TRAP_BEG;
+        ret = pcap_loop(cap->pcap, cnt, handler, (u_char *)cap);
+        TRAP_END;
     } else {
-	int fd = pcap_fileno(cap->pcap);
-	fd_set rset;
-	struct timeval tm;
+        int fd = pcap_fileno(cap->pcap);
+        fd_set rset;
+        struct timeval tm;
 
-	FD_ZERO(&rset);
-	tm.tv_sec = 0;
-	tm.tv_usec = 0;
-	for (;;) {
-	    do {
-		FD_SET(fd, &rset);
-		if (select(fd+1, &rset, NULL, NULL, &tm) == 0) {
-		    rb_thread_wait_fd(fd);
-		}
-		TRAP_BEG;
-		ret = pcap_read(cap->pcap, 1, handler, (u_char *)cap);
-		TRAP_END;
-	    } while (ret == 0);
-	    if (ret <= 0)
-		break;
-	    if (cnt > 0) {
-		cnt -= ret;
-		if (cnt <= 0)
-		    break;
-	    }
-	}
+        FD_ZERO(&rset);
+        tm.tv_sec = 0;
+        tm.tv_usec = 0;
+        for (;;) {
+            do {
+                FD_SET(fd, &rset);
+                if (select(fd+1, &rset, NULL, NULL, &tm) == 0) {
+                    rb_thread_wait_fd(fd);
+                }
+                TRAP_BEG;
+                ret = pcap_read(cap->pcap, 1, handler, (u_char *)cap);
+                TRAP_END;
+            } while (ret == 0);
+            if (ret <= 0)
+                break;
+            if (cnt > 0) {
+                cnt -= ret;
+                if (cnt <= 0)
+                    break;
+            }
+        }
     }
 #endif
     return INT2FIX(ret);
@@ -398,26 +398,26 @@ capture_setfilter(argc, argv, self)
 
     /* scan arg */
     if (rb_scan_args(argc, argv, "11", &vfilter, &optimize) == 1) {
-	optimize = Qtrue;
+        optimize = Qtrue;
     }
 
     /* check arg */
     if (IsKindOf(vfilter, cFilter)) {
-	struct filter_object *f;
-	GetFilter(vfilter, f);
-	filter = f->expr;
+        struct filter_object *f;
+        GetFilter(vfilter, f);
+        filter = f->expr;
     } else {
-	Check_Type(vfilter, T_STRING);
-	filter = RSTRING(vfilter)->ptr;
+        Check_Type(vfilter, T_STRING);
+        filter = RSTRING(vfilter)->ptr;
     }
     opt = RTEST(optimize);
 
     /* operation */
     if (pcap_compile(cap->pcap, &program, filter,
-		     opt, cap->netmask) < 0)
-	rb_raise(ePcapError, "setfilter: %s", pcap_geterr(cap->pcap));
+                     opt, cap->netmask) < 0)
+        rb_raise(ePcapError, "setfilter: %s", pcap_geterr(cap->pcap));
     if (pcap_setfilter(cap->pcap, &program) < 0)
-	rb_raise(ePcapError, "setfilter: %s", pcap_geterr(cap->pcap));
+        rb_raise(ePcapError, "setfilter: %s", pcap_geterr(cap->pcap));
     
     return Qnil;
 }
@@ -458,12 +458,12 @@ capture_stats(self)
     GetCapture(self, cap);
 
     if (pcap_stats(cap->pcap, &stat) == -1)
-	return Qnil;
+        return Qnil;
 
     v_stat = rb_funcall(cPcapStat, rb_intern("new"), 3,
-			UINT2NUM(stat.ps_recv),
-			UINT2NUM(stat.ps_drop),
-			UINT2NUM(stat.ps_ifdrop));
+                        UINT2NUM(stat.ps_recv),
+                        UINT2NUM(stat.ps_drop),
+                        UINT2NUM(stat.ps_ifdrop));
 
     return v_stat;
 }
@@ -496,9 +496,9 @@ free_dumper(dumper)
 {
     DEBUG_PRINT("free_dumper");
     if (dumper->pcap_dumper != NULL) {
-	DEBUG_PRINT("closing dumper");
-	pcap_dump_close(dumper->pcap_dumper);
-	dumper->pcap_dumper = NULL;
+        DEBUG_PRINT("closing dumper");
+        pcap_dump_close(dumper->pcap_dumper);
+        dumper->pcap_dumper = NULL;
     }
     free(dumper);
 }
@@ -522,11 +522,11 @@ dumper_open(class, v_cap, v_fname)
 
     pcap_dumper = pcap_dump_open(cap->pcap, RSTRING(v_fname)->ptr);
     if (pcap_dumper == NULL) {
-	rb_raise(ePcapError, "dumper_open: %s", pcap_geterr(cap->pcap));
+        rb_raise(ePcapError, "dumper_open: %s", pcap_geterr(cap->pcap));
     }
 
     self = Data_Make_Struct(class, struct dumper_object, 0,
-			    free_dumper, dumper);
+                            free_dumper, dumper);
     dumper->pcap_dumper = pcap_dumper;
     dumper->dl_type = cap->dl_type;
     dumper->snaplen = pcap_snapshot(cap->pcap);
@@ -562,9 +562,9 @@ dumper_dump(self, v_pkt)
     CheckClass(v_pkt, cPacket);
     GetPacket(v_pkt, pkt);
     if (pkt->hdr.dl_type != dumper->dl_type)
-	rb_raise(rb_eArgError, "Cannot dump this packet: data-link type mismatch");
+        rb_raise(rb_eArgError, "Cannot dump this packet: data-link type mismatch");
     if (pkt->hdr.pkthdr.caplen > dumper->snaplen)
-	rb_raise(rb_eArgError, "Cannot dump this packet: too large caplen");
+        rb_raise(rb_eArgError, "Cannot dump this packet: too large caplen");
 
     pcap_dump((u_char *)dumper->pcap_dumper, &pkt->hdr.pkthdr, pkt->data);
     return Qnil;
@@ -611,59 +611,59 @@ filter_new(argc, argv, class)
     bpf_u_int32 netmask;
 
     n = rb_scan_args(argc, argv, "13", &v_expr, &v_capture,
-		     &v_optimize, &v_netmask);
+                     &v_optimize, &v_netmask);
     /* filter expression */
     Check_Type(v_expr, T_STRING);
     expr = STR2CSTR(v_expr);
     /* capture object */
     if (IsKindOf(v_capture, cCapture)) {
-	CheckClass(v_capture, cCapture);
-	GetCapture(v_capture, capture);
-	pcap = capture->pcap;
+        CheckClass(v_capture, cCapture);
+        GetCapture(v_capture, capture);
+        pcap = capture->pcap;
     } else if (NIL_P(v_capture)) {
-	/* assume most common case */
-	snaplen  = DEFAULT_SNAPLEN;
-	linktype = DEFAULT_DATALINK;
-	pcap = 0;
+        /* assume most common case */
+        snaplen  = DEFAULT_SNAPLEN;
+        linktype = DEFAULT_DATALINK;
+        pcap = 0;
     } else {
-	snaplen  = NUM2INT(rb_funcall(v_capture, rb_intern("[]"), 1, INT2FIX(0)));
-	linktype = NUM2INT(rb_funcall(v_capture, rb_intern("[]"), 1, INT2FIX(1)));
-	pcap = 0;
+        snaplen  = NUM2INT(rb_funcall(v_capture, rb_intern("[]"), 1, INT2FIX(0)));
+        linktype = NUM2INT(rb_funcall(v_capture, rb_intern("[]"), 1, INT2FIX(1)));
+        pcap = 0;
     }
     /* optimize flag */
     optimize = 1;
     if (n >= 3) {
-	optimize = RTEST(v_optimize);
+        optimize = RTEST(v_optimize);
     }
     /* netmask */
     netmask = 0;
     if (n >= 4) {
-	bpf_u_int32 mask = NUM2UINT(v_netmask);
-	netmask = htonl(mask);
+        bpf_u_int32 mask = NUM2UINT(v_netmask);
+        netmask = htonl(mask);
     }
 
     filter = (struct filter_object *)xmalloc(sizeof(struct filter_object));
     if (pcap) {
-	if (pcap_compile(pcap, &filter->program, expr, optimize, netmask) < 0)
-	    rb_raise(ePcapError, "%s", pcap_geterr(pcap));
-	filter->datalink = pcap_datalink(pcap);
-	filter->snaplen  = pcap_snapshot(pcap);
+        if (pcap_compile(pcap, &filter->program, expr, optimize, netmask) < 0)
+            rb_raise(ePcapError, "%s", pcap_geterr(pcap));
+        filter->datalink = pcap_datalink(pcap);
+        filter->snaplen  = pcap_snapshot(pcap);
     } else {
 #ifdef HAVE_PCAP_COMPILE_NOPCAP
-	if (pcap_compile_nopcap(snaplen, linktype, &filter->program, expr, optimize, netmask) < 0)
-	    /* libpcap-0.5 provides no error report for pcap_compile_nopcap */
-	    rb_raise(ePcapError, "pcap_compile_nopcap error");
-	filter->datalink = linktype;
-	filter->snaplen  = snaplen;
+        if (pcap_compile_nopcap(snaplen, linktype, &filter->program, expr, optimize, netmask) < 0)
+            /* libpcap-0.5 provides no error report for pcap_compile_nopcap */
+            rb_raise(ePcapError, "pcap_compile_nopcap error");
+        filter->datalink = linktype;
+        filter->snaplen  = snaplen;
 #else
-	rb_raise(rb_eArgError, "pcap_compile_nopcap needs libpcap-0.5 or later");
+        rb_raise(rb_eArgError, "pcap_compile_nopcap needs libpcap-0.5 or later");
 #endif
     }
     self = Data_Wrap_Struct(class, mark_filter, free_filter, filter);
-    filter->expr	= strdup(expr);
-    filter->param	= v_capture;
-    filter->optimize	= optimize ? Qtrue : Qfalse;
-    filter->netmask	= INT2NUM(ntohl(netmask));
+    filter->expr        = strdup(expr);
+    filter->param       = v_capture;
+    filter->optimize    = optimize ? Qtrue : Qfalse;
+    filter->netmask     = INT2NUM(ntohl(netmask));
 
     return self;
 }
@@ -682,14 +682,14 @@ filter_match(self, v_pkt)
     h = &pkt->hdr.pkthdr;
 
     if (filter->datalink != pkt->hdr.dl_type)
-	rb_raise(rb_eRuntimeError, "Incompatible datalink type");
+        rb_raise(rb_eRuntimeError, "Incompatible datalink type");
     if (filter->snaplen < h->caplen)
-	rb_raise(rb_eRuntimeError, "Incompatible snaplen");
+        rb_raise(rb_eRuntimeError, "Incompatible snaplen");
 
     if (bpf_filter(filter->program.bf_insns, pkt->data, h->len, h->caplen))
-	return Qtrue;
+        return Qtrue;
     else
-	return Qfalse;
+        return Qfalse;
 }
 
 static VALUE
@@ -708,8 +708,8 @@ new_filter(expr, param, optimize, netmask)
     VALUE param, optimize, netmask;
 {
     return rb_funcall(cFilter,
-		      rb_intern("new"), 4,
-		      rb_str_new2(expr), param, optimize, netmask);
+                      rb_intern("new"), 4,
+                      rb_str_new2(expr), param, optimize, netmask);
 }
 
 static VALUE
@@ -828,10 +828,10 @@ Init_pcap(void)
 
     /* define class PcapStat */
     cPcapStat = rb_funcall(rb_cStruct, rb_intern("new"), 4,
-			   Qnil,
-			   INT2NUM(rb_intern("recv")),
-			   INT2NUM(rb_intern("drop")),
-			   INT2NUM(rb_intern("ifdrop")));
+                           Qnil,
+                           INT2NUM(rb_intern("recv")),
+                           INT2NUM(rb_intern("drop")),
+                           INT2NUM(rb_intern("ifdrop")));
     rb_define_const(mPcap, "Stat", cPcapStat);
 
     /* define exception classes */

@@ -40,46 +40,46 @@
 #ifndef UINT2NUM
 # define UINT2NUM(i) rb_uint2inum(i)
 #endif
-#define MIN(x, y)	((x)<(y) ? (x) : (y))
+#define MIN(x, y)       ((x)<(y) ? (x) : (y))
 
 
-#define PACKET_MARSHAL_VERSION	1
+#define PACKET_MARSHAL_VERSION  1
 
 /* ruby config.h defines WORDS_BIGENDIAN if big-endian */
 struct packet_object_header {
 #ifdef WORDS_BIGENDIAN
-    u_char version:4;		/* marshal format version	*/
-    u_char flags:4;		/* flags			*/
+    u_char version:4;           /* marshal format version       */
+    u_char flags:4;             /* flags                        */
 #else
-    u_char flags:4;		/* flags			*/
-    u_char version:4;		/* marshal format version	*/
+    u_char flags:4;             /* flags                        */
+    u_char version:4;           /* marshal format version       */
 #endif
-#define POH_UDATA 0x01		/* flag: user data exists	*/
-#define POH_RSVD1 0x02		/*       (reserved)		*/
-#define POH_RSVD2 0x03		/*       (reserved)		*/
-#define POH_RSVD3 0x04		/*       (reserved)		*/
-    u_char dl_type;		/* data-link type (DLT_*)	*/
-    u_short layer3_off;		/* layer 3 header offset	*/
-    u_short layer4_off;		/* layer 4 header offset	*/
-    u_short layer5_off;		/* layer 5 header offset	*/
-#define OFF_NONEXIST 0xffff	/* offset value for non-existent layer	*/
-    struct pcap_pkthdr pkthdr;	/* pcap packet header		*/
+#define POH_UDATA 0x01          /* flag: user data exists       */
+#define POH_RSVD1 0x02          /*       (reserved)             */
+#define POH_RSVD2 0x03          /*       (reserved)             */
+#define POH_RSVD3 0x04          /*       (reserved)             */
+    u_char dl_type;             /* data-link type (DLT_*)       */
+    u_short layer3_off;         /* layer 3 header offset        */
+    u_short layer4_off;         /* layer 4 header offset        */
+    u_short layer5_off;         /* layer 5 header offset        */
+#define OFF_NONEXIST 0xffff     /* offset value for non-existent layer  */
+    struct pcap_pkthdr pkthdr;  /* pcap packet header           */
 };
 
 struct packet_object {
-    struct packet_object_header hdr;	/* packet object header	*/
-    u_char *data;			/* packet data		*/
-    VALUE udata;			/* user data		*/
+    struct packet_object_header hdr;    /* packet object header */
+    u_char *data;                       /* packet data          */
+    VALUE udata;                        /* user data            */
 };
 
 #define PKTFLAG_TEST(pkt, flag) ((pkt)->hdr.flags & (flag))
 #define PKTFLAG_SET(pkt, flag, val) \
     ((val) ? ((pkt)->hdr.flags |= (flag)) : ((pkt)->hdr.flags &= ~(flag)))
 
-#define LAYER2_HDR(pkt)	((pkt)->data)
-#define LAYER3_HDR(pkt)	((pkt)->data + (pkt)->hdr.layer3_off)
-#define LAYER4_HDR(pkt)	((pkt)->data + (pkt)->hdr.layer4_off)
-#define LAYER5_HDR(pkt)	((pkt)->data + (pkt)->hdr.layer5_off)
+#define LAYER2_HDR(pkt) ((pkt)->data)
+#define LAYER3_HDR(pkt) ((pkt)->data + (pkt)->hdr.layer3_off)
+#define LAYER4_HDR(pkt) ((pkt)->data + (pkt)->hdr.layer4_off)
+#define LAYER5_HDR(pkt) ((pkt)->data + (pkt)->hdr.layer5_off)
 
 #define GetPacket(obj, pkt) Data_Get_Struct(obj, struct packet_object, pkt)
 #define Caplen(pkt, from) ((pkt)->hdr.pkthdr.caplen - (from))
@@ -108,8 +108,8 @@ void Init_packet(void);
 VALUE new_packet(const u_char *, const struct pcap_pkthdr *, int);
 
 /* ip_packet.c */
-#define IP_HDR(pkt)	((struct ip *)LAYER3_HDR(pkt))
-#define IP_DATA(pkt)	((u_char *)LAYER4_HDR(pkt))
+#define IP_HDR(pkt)     ((struct ip *)LAYER3_HDR(pkt))
+#define IP_DATA(pkt)    ((u_char *)LAYER4_HDR(pkt))
 extern VALUE cIPPacket;
 void Init_ip_packet(void);
 VALUE setup_ip_packet(struct packet_object *, int);
