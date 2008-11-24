@@ -53,21 +53,21 @@ module Pcap
 
       # open
       begin
-	if @device
-	  @capture = Capture.open_live(@device, @snaplen)
-	elsif @rfile
-	  if @rfile !~ /\.gz$/
-	    @capture = Capture.open_offline(@rfile)
-	  else
-	    $stdin = IO.popen("gzip -dc < #@rfile", 'r')
-	    @capture = Capture.open_offline('-')
-	  end
-	end
-	@capture.setfilter(@filter)
+        if @device
+          @capture = Capture.open_live(@device, @snaplen)
+        elsif @rfile
+          if @rfile !~ /\.gz$/
+            @capture = Capture.open_offline(@rfile)
+          else
+            $stdin = IO.popen("gzip -dc < #@rfile", 'r')
+            @capture = Capture.open_offline('-')
+          end
+        end
+        @capture.setfilter(@filter)
       rescue PcapError, ArgumentError
-	$stdout.flush
-	$stderr.puts $!
-	exit(1)
+        $stdout.flush
+        $stderr.puts $!
+        exit(1)
       end
     end
 
@@ -75,17 +75,17 @@ module Pcap
 
     def add_filter(f)
       if @filter == nil || @filter =~ /^\s*$/  # if empty
-	@filter = f
+        @filter = f
       else
-	f = f.source if f.is_a? Filter
-	@filter = "( #{@filter} ) and ( #{f} )"
+        f = f.source if f.is_a? Filter
+        @filter = "( #{@filter} ) and ( #{f} )"
       end
       @capture.setfilter(@filter)
     end
 
     def each_packet(&block)
       begin
-	duplicated = (RUBY_PLATFORM =~ /linux/ && @device == "lo")
+        duplicated = (RUBY_PLATFORM =~ /linux/ && @device == "lo")
         unless duplicated
           @capture.loop(@count, &block)
         else
