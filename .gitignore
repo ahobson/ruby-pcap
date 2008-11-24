@@ -1,0 +1,4 @@
+*.o
+pcap.bundle
+mkmf.log
+Makefile
