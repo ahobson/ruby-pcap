@@ -620,6 +620,29 @@ dumper_dump(self, v_pkt)
     return Qnil;
 }
 
+static VALUE
+dumper_dump_raw(self, v_buf)
+    VALUE self;
+    VALUE v_buf;
+{
+    struct dumper_object *dumper;
+    const u_char *buf;
+    struct pcap_pkthdr pkt_hdr;
+    
+    DEBUG_PRINT("dumper_dump_raw");
+    GetDumper(self, dumper);
+    
+    Check_Type(v_buf, T_STRING);
+    buf = (void *)RSTRING(v_buf)->ptr;
+    
+    gettimeofday(&(pkt_hdr.ts), NULL);
+    pkt_hdr.caplen = dumper->snaplen;
+    pkt_hdr.len = RSTRING(v_buf)->len;
+    
+    pcap_dump((u_char *)dumper->pcap_dumper, &pkt_hdr, buf);
+    return Qnil;
+}
+
 /*
  * Filter object
  */
@@ -865,6 +888,7 @@ Init_pcap(void)
     rb_define_singleton_method(cDumper, "open", dumper_open, 2);
     rb_define_method(cDumper, "close", dumper_close, 0);
     rb_define_method(cDumper, "dump", dumper_dump, 1);
+    rb_define_method(cDumper, "dump_raw", dumper_dump_raw, 1);
 
     /* define class Filter */
     cFilter = rb_define_class_under(mPcap, "Filter", rb_cObject);
