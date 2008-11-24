@@ -12,7 +12,7 @@
 #include <net/if.h>
 #include <netinet/if_ether.h>
 
-#define DL_HDR(pkt) ((u_char *)LAYER2_HDR(pkt))
+#define DL_HDR(pkt)     ((u_char *)LAYER2_HDR(pkt))
 #define DL_DATA(pkt)    ((u_char *)LAYER3_HDR(pkt))
 
 VALUE cPacket;
@@ -36,12 +36,12 @@ mark_packet(pkt)
 {
     DEBUG_PRINT("mark_packet");
     if (pkt->udata != Qnil)
-    rb_gc_mark(pkt->udata);
+        rb_gc_mark(pkt->udata);
 }
 
 struct datalink_type {
-    int nltype_off; /* offset of network-layer type field */
-    int nl_off;     /* offset of network-layer header */
+    int nltype_off;     /* offset of network-layer type field */
+    int nl_off;         /* offset of network-layer header */
 };
 
 static struct datalink_type datalinks[] = {
@@ -85,51 +85,51 @@ new_packet(data, pkthdr, dl_type)
 
     /* check nework layer type and offset */
     if (dl_type > DATALINK_MAX) {
-    rb_raise(ePcapError, "Unknown data-link type (%d)", dl_type);
+        rb_raise(ePcapError, "Unknown data-link type (%d)", dl_type);
     }
     nltype_off  = datalinks[dl_type].nltype_off;
-    nl_off  = datalinks[dl_type].nl_off;
+    nl_off      = datalinks[dl_type].nl_off;
     if (nl_off < 0) {
-    rb_raise(ePcapError, "Unsupported data-link type (%d)", dl_type);
+        rb_raise(ePcapError, "Unsupported data-link type (%d)", dl_type);
     }
     if (nltype_off == -1) {
-    /* assume IP */
-    nl_type = ETHERTYPE_IP;
+        /* assume IP */
+        nl_type = ETHERTYPE_IP;
     } else {
-    /* assume Ether Type value */
-    nl_type = ntohs(*(u_short *)(data + nltype_off));
+        /* assume Ether Type value */
+        nl_type = ntohs(*(u_short *)(data + nltype_off));
     }
 
     /* alloc memory and setup packet_object */
     pad = nl_off % 4;   /* align network layer header */
     pkt = xmalloc(sizeof(*pkt) + pad + pkthdr->caplen);
     pkt->hdr.version    = PACKET_MARSHAL_VERSION;
-    pkt->hdr.flags  = 0;
+    pkt->hdr.flags      = 0;
     pkt->hdr.dl_type    = dl_type;
     pkt->hdr.layer3_off = OFF_NONEXIST;
     pkt->hdr.layer4_off = OFF_NONEXIST;
     pkt->hdr.layer5_off = OFF_NONEXIST;
-    pkt->hdr.pkthdr = *pkthdr;
+    pkt->hdr.pkthdr     = *pkthdr;
     pkt->data = (u_char *)pkt + sizeof(*pkt) + pad;
     pkt->udata = Qnil;
     memcpy(pkt->data, data, pkthdr->caplen);
 
     nl_len = pkthdr->caplen - nl_off;
     if (nl_off >= 0 && nl_len > 0)
-    pkt->hdr.layer3_off = nl_off;
+        pkt->hdr.layer3_off = nl_off;
 
     /* setup upper layer */
     class = cPacket;
     if (pkt->hdr.layer3_off != OFF_NONEXIST) {
-    switch (nl_type) {
-    case ETHERTYPE_IP:
-        class = setup_ip_packet(pkt, nl_len);
-        break;
-    }
+        switch (nl_type) {
+        case ETHERTYPE_IP:
+            class = setup_ip_packet(pkt, nl_len);
+            break;
+        }
     }
 #if DEBUG
     if (ruby_debug && TYPE(class) != T_CLASS) {
-    rb_fatal("not class");
+        rb_fatal("not class");
     }
 #endif
     return Data_Wrap_Struct(class, mark_packet, free_packet, pkt);
@@ -151,44 +151,44 @@ packet_load(class, str)
     hdr = (struct packet_object_header *)str_ptr;
     version = hdr->version;
     if (version == PACKET_MARSHAL_VERSION) {
-    bpf_u_int32 caplen;
-    u_short layer3_off;
-    int pad;
+        bpf_u_int32 caplen;
+        u_short layer3_off;
+        int pad;
 
-    caplen = ntohl(hdr->pkthdr.caplen);
-    layer3_off = ntohs(hdr->layer3_off);
-    pad = layer3_off % 4;   /* align network layer header */
-    pkt = (struct packet_object *)xmalloc(sizeof(*pkt) + pad + caplen);
+        caplen = ntohl(hdr->pkthdr.caplen);
+        layer3_off = ntohs(hdr->layer3_off);
+        pad = layer3_off % 4;   /* align network layer header */
+        pkt = (struct packet_object *)xmalloc(sizeof(*pkt) + pad + caplen);
 
-    pkt->hdr.version        = PACKET_MARSHAL_VERSION;
-    pkt->hdr.flags          = hdr->flags;
-    pkt->hdr.dl_type        = hdr->dl_type;
-    pkt->hdr.layer3_off     = ntohs(hdr->layer3_off);
-    pkt->hdr.layer4_off     = ntohs(hdr->layer4_off);
-    pkt->hdr.layer5_off     = ntohs(hdr->layer5_off);
-    pkt->hdr.pkthdr.ts.tv_sec   = ntohl(hdr->pkthdr.ts.tv_sec);
-    pkt->hdr.pkthdr.ts.tv_usec  = ntohl(hdr->pkthdr.ts.tv_usec);
-    pkt->hdr.pkthdr.caplen      = ntohl(hdr->pkthdr.caplen);
-    pkt->hdr.pkthdr.len     = ntohl(hdr->pkthdr.len);
+        pkt->hdr.version                = PACKET_MARSHAL_VERSION;
+        pkt->hdr.flags                  = hdr->flags;
+        pkt->hdr.dl_type                = hdr->dl_type;
+        pkt->hdr.layer3_off             = ntohs(hdr->layer3_off);
+        pkt->hdr.layer4_off             = ntohs(hdr->layer4_off);
+        pkt->hdr.layer5_off             = ntohs(hdr->layer5_off);
+        pkt->hdr.pkthdr.ts.tv_sec       = ntohl(hdr->pkthdr.ts.tv_sec);
+        pkt->hdr.pkthdr.ts.tv_usec      = ntohl(hdr->pkthdr.ts.tv_usec);
+        pkt->hdr.pkthdr.caplen          = ntohl(hdr->pkthdr.caplen);
+        pkt->hdr.pkthdr.len             = ntohl(hdr->pkthdr.len);
 
-    pkt->data = (u_char *)pkt + sizeof(*pkt) + pad;
-    memcpy(pkt->data, str_ptr + sizeof(*hdr), caplen);
-    if (PKTFLAG_TEST(pkt, POH_UDATA)) {
-        int l = sizeof(*hdr) + caplen;
-        VALUE ustr = rb_str_substr(str, l, RSTRING(str)->len - l);
-        pkt->udata = rb_funcall(mMarshal, id_load, 1, ustr);
+        pkt->data = (u_char *)pkt + sizeof(*pkt) + pad;
+        memcpy(pkt->data, str_ptr + sizeof(*hdr), caplen);
+        if (PKTFLAG_TEST(pkt, POH_UDATA)) {
+            int l = sizeof(*hdr) + caplen;
+            VALUE ustr = rb_str_substr(str, l, RSTRING(str)->len - l);
+            pkt->udata = rb_funcall(mMarshal, id_load, 1, ustr);
+        } else {
+            pkt->udata = Qnil;
+        }
+        PKTFLAG_SET(pkt, POH_UDATA, (pkt->udata != Qnil));
     } else {
-        pkt->udata = Qnil;
-    }
-    PKTFLAG_SET(pkt, POH_UDATA, (pkt->udata != Qnil));
-    } else {
-    rb_raise(rb_eArgError, "unknown packet marshal version(0x%x)", version);
+        rb_raise(rb_eArgError, "unknown packet marshal version(0x%x)", version);
     }
 
     if (pkt != NULL)
-    return Data_Wrap_Struct(class, mark_packet, free_packet, pkt);
+        return Data_Wrap_Struct(class, mark_packet, free_packet, pkt);
     else
-    return Qnil;
+        return Qnil;
 }
 
 static VALUE
@@ -203,23 +203,23 @@ packet_dump(self, limit)
     DEBUG_PRINT("packet_dump");
     GetPacket(self, pkt);
 
-    hdr.version         = PACKET_MARSHAL_VERSION;
-    hdr.flags           = pkt->hdr.flags;
-    hdr.dl_type         = pkt->hdr.dl_type;
-    hdr.layer3_off      = htons(pkt->hdr.layer3_off);
-    hdr.layer4_off      = htons(pkt->hdr.layer4_off);
-    hdr.layer5_off      = htons(pkt->hdr.layer5_off);
-    hdr.pkthdr.ts.tv_sec    = htonl(pkt->hdr.pkthdr.ts.tv_sec);
-    hdr.pkthdr.ts.tv_usec   = htonl(pkt->hdr.pkthdr.ts.tv_usec);
-    hdr.pkthdr.caplen       = htonl(pkt->hdr.pkthdr.caplen);
-    hdr.pkthdr.len      = htonl(pkt->hdr.pkthdr.len);
+    hdr.version                 = PACKET_MARSHAL_VERSION;
+    hdr.flags                   = pkt->hdr.flags;
+    hdr.dl_type                 = pkt->hdr.dl_type;
+    hdr.layer3_off              = htons(pkt->hdr.layer3_off);
+    hdr.layer4_off              = htons(pkt->hdr.layer4_off);
+    hdr.layer5_off              = htons(pkt->hdr.layer5_off);
+    hdr.pkthdr.ts.tv_sec        = htonl(pkt->hdr.pkthdr.ts.tv_sec);
+    hdr.pkthdr.ts.tv_usec       = htonl(pkt->hdr.pkthdr.ts.tv_usec);
+    hdr.pkthdr.caplen           = htonl(pkt->hdr.pkthdr.caplen);
+    hdr.pkthdr.len              = htonl(pkt->hdr.pkthdr.len);
 
     str = rb_str_new((char *)&hdr, sizeof(hdr));
     rb_str_cat(str, pkt->data, pkt->hdr.pkthdr.caplen);
     if (pkt->udata != Qnil) {
-    VALUE ustr;
-    ustr = rb_funcall(mMarshal, id_dump, 1, pkt->udata);
-    rb_str_concat(str, ustr);
+        VALUE ustr;
+        ustr = rb_funcall(mMarshal, id_dump, 1, pkt->udata);
+        rb_str_concat(str, ustr);
     }
     return str;
 }
@@ -245,7 +245,7 @@ packet_match(self, expr)
      VALUE expr;
 {
     if (IsKindOf(expr, cFilter)) {
-    return filter_match(expr, self);
+        return filter_match(expr, self);
     }
     rb_raise(rb_eArgError, "Not Filter");
 }
@@ -270,7 +270,7 @@ PACKET_METHOD(packet_udp, rb_obj_is_kind_of(self, cUDPPacket));
 PACKET_METHOD(packet_length, UINT32_2_NUM(pkt->hdr.pkthdr.len));
 PACKET_METHOD(packet_caplen, UINT32_2_NUM(pkt->hdr.pkthdr.caplen));
 PACKET_METHOD(packet_time, rb_time_new(pkt->hdr.pkthdr.ts.tv_sec,
-                       pkt->hdr.pkthdr.ts.tv_usec));
+                                       pkt->hdr.pkthdr.ts.tv_usec));
 PACKET_METHOD(packet_time_i, rb_int2inum(pkt->hdr.pkthdr.ts.tv_sec));
 PACKET_METHOD(packet_raw_data, rb_str_new(pkt->data, pkt->hdr.pkthdr.caplen));
 

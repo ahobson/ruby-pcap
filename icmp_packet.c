@@ -31,40 +31,40 @@
 
 /* rfc1700 */
 #ifndef ICMP_UNREACH_NET_UNKNOWN
-#define ICMP_UNREACH_NET_UNKNOWN        6
+#define ICMP_UNREACH_NET_UNKNOWN	6
 #endif
 #ifndef ICMP_UNREACH_HOST_UNKNOWN
-#define ICMP_UNREACH_HOST_UNKNOWN       7
+#define ICMP_UNREACH_HOST_UNKNOWN	7
 #endif
 #ifndef ICMP_UNREACH_ISOLATED
-#define ICMP_UNREACH_ISOLATED           8
+#define ICMP_UNREACH_ISOLATED		8
 #endif
 #ifndef ICMP_UNREACH_NET_PROHIB
-#define ICMP_UNREACH_NET_PROHIB         9
+#define ICMP_UNREACH_NET_PROHIB		9
 #endif
 #ifndef ICMP_UNREACH_HOST_PROHIB
-#define ICMP_UNREACH_HOST_PROHIB        10
+#define ICMP_UNREACH_HOST_PROHIB	10
 #endif
 #ifndef ICMP_UNREACH_TOSNET
-#define ICMP_UNREACH_TOSNET             11
+#define ICMP_UNREACH_TOSNET		11
 #endif
 #ifndef ICMP_UNREACH_TOSHOST
-#define ICMP_UNREACH_TOSHOST            12
+#define ICMP_UNREACH_TOSHOST		12
 #endif
 
 /* rfc1716 */
 #ifndef ICMP_UNREACH_FILTER_PROHIB
-#define ICMP_UNREACH_FILTER_PROHIB      13
+#define ICMP_UNREACH_FILTER_PROHIB	13
 #endif
 #ifndef ICMP_UNREACH_HOST_PRECEDENCE
-#define ICMP_UNREACH_HOST_PRECEDENCE    14
+#define ICMP_UNREACH_HOST_PRECEDENCE	14
 #endif
 #ifndef ICMP_UNREACH_PRECEDENCE_CUTOFF
-#define ICMP_UNREACH_PRECEDENCE_CUTOFF  15
+#define ICMP_UNREACH_PRECEDENCE_CUTOFF	15
 #endif
 
 #ifndef ICMP_PARAMPROB_OPTABSENT
-#define ICMP_PARAMPROB_OPTABSENT        1
+#define ICMP_PARAMPROB_OPTABSENT	1
 #endif
 
 #define ICMP_HDR(pkt)  ((struct icmp *)LAYER4_HDR(pkt))
@@ -116,11 +116,11 @@ setup_icmp_packet(pkt, tl_len)
     VALUE klass =  cICMPPacket;
 
     if (tl_len >= 1) {
-        struct icmp *icmp = ICMP_HDR(pkt);
-        if (icmp->icmp_type <= ICMP_TYPE_MAX
-            && icmp_types[icmp->icmp_type].klass) {
-            klass = icmp_types[icmp->icmp_type].klass;
-        }
+	struct icmp *icmp = ICMP_HDR(pkt);
+	if (icmp->icmp_type <= ICMP_TYPE_MAX
+	    && icmp_types[icmp->icmp_type].klass) {
+	    klass = icmp_types[icmp->icmp_type].klass;
+	}
     }
     return klass;
 }
@@ -147,12 +147,12 @@ ICMPP_METHOD(icmpp_type,   1, INT2FIX(icmp->icmp_type))
 ICMPP_METHOD(icmpp_code,   2, INT2FIX(icmp->icmp_code))
 ICMPP_METHOD(icmpp_cksum,  4, INT2FIX(ntohs(icmp->icmp_cksum)))
 ICMPP_METHOD(icmpp_typestr, 1,
-             (icmp->icmp_type <= ICMP_TYPE_MAX
-              &&icmp_types[icmp->icmp_type].name)
-             ? rb_str_new2(icmp_types[icmp->icmp_type].name)
-             : rb_obj_as_string(INT2FIX(icmp->icmp_type)))
+	     (icmp->icmp_type <= ICMP_TYPE_MAX
+	      &&icmp_types[icmp->icmp_type].name)
+	     ? rb_str_new2(icmp_types[icmp->icmp_type].name)
+	     : rb_obj_as_string(INT2FIX(icmp->icmp_type)))
 
-                                                 
+			 			 
 /*
  * icmp_type specific methods
  */
@@ -163,7 +163,7 @@ ICMPP_METHOD(icmpp_id,     6, INT2FIX(ntohs(icmp->icmp_id)))
 ICMPP_METHOD(icmpp_seq,    8, INT2FIX(ntohs(icmp->icmp_seq)))
 #ifdef WORDS_BIGENDIAN
 ICMPP_METHOD(icmpp_seqle,  8, INT2FIX(((0x00ff&icmp->icmp_seq)<<8) +
-                                      (icmp->icmp_seq >> 8)))
+				      (icmp->icmp_seq >> 8)))
 #else
 ICMPP_METHOD(icmpp_seqle,  8, INT2FIX(icmp->icmp_seq))
 #endif
@@ -187,7 +187,7 @@ icmpp_nextmtu(self)
     icmp = ICMP_HDR(pkt);
 
     if (icmp->icmp_code != ICMP_UNREACH_NEEDFRAG)
-        rb_raise(rb_eRuntimeError, "not ICMP_UNREACH_NEEDFRAG");
+	rb_raise(rb_eRuntimeError, "not ICMP_UNREACH_NEEDFRAG");
     return INT2FIX(ntohs(MTUD(icmp)->nextmtu));
 }
 
@@ -221,8 +221,8 @@ icmpp_radv(self, ind)
     GetPacket(self, pkt);
     CheckTruncateICMP(pkt, 5);
     if (i > IHRD(icmp)->num_addrs)
-        rb_raise(rb_eRuntimeError, "num_addrs = %d, requested radv(%d)",
-                 (int)IHRD(icmp)->num_addrs, i);
+	rb_raise(rb_eRuntimeError, "num_addrs = %d, requested radv(%d)",
+		 (int)IHRD(icmp)->num_addrs, i);
 
     CheckTruncateICMP(pkt, 8 + i*8);
     icmp = ICMP_HDR(pkt);
