@@ -1,0 +1,50 @@
+* 概要
+
+ruby-pcap は Ruby から LBL の libpcap (Packet Capture library) へアク
+セスするための拡張ライブラリです。TCP/IPのヘッダの情報にアクセスするた
+めのクラスも含んでいます。
+
+* インストール
+
+必要なもの:
+
+  - ruby-1.4.x
+  - libpcap (http://www.tcpdump.org/)
+
+コンパイル:
+
+ruby が拡張ライブラリのダイナミックリンクをサポートしている場合は、
+以下の手順でインストールできます。
+
+  ruby extconf.rb [options]
+  make
+  make install
+
+'ruby extconf.rb'を実行する時には以下のオプションを指定できます。
+
+`--with-pcap-dir=PREFIX'
+    libpcapがインストールされているディレクトリを指定します。
+    デフォルトは'/usr/local'です。
+
+ダイナミックリンクが使えない場合は ruby に静的にリンクして下さい。
+その場合は ruby ソース中の 'ext' ディレクトリの下で ruby-pcap を展開し
+てから ruby をビルドして下さい。
+
+* 使い方
+
+doc および doc-ja ディレクトリ以下にあるファイルを見て下さい。
+examples ディレクトリに簡単なサンプルスクリプトがあります。
+
+* 作者
+
+福嶋正機 <fukusima@goto.info.waseda.ac.jp>
+
+ruby-pcapは福嶋正機が著作権を保持する free software です。
+
+ruby-pcapはGPL(GNU GENERAL PUBLIC LICENSE)に従って再配布または
+変更することができます。GPLについてはCOPYINGファイルを参照して
+ください。
+
+ruby-pcapは無保証です。作者はruby-pcapのバグなどから発生する
+いかなる損害に対しても責任を持ちません。詳細については GPL を
+参照してください。
