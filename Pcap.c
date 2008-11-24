@@ -468,6 +468,33 @@ capture_stats(self)
     return v_stat;
 }
 
+static VALUE
+capture_inject(self, v_buf)
+   VALUE self;
+   VALUE v_buf;
+{
+    struct capture_object *cap;
+    const void *buf;
+    size_t bufsiz;
+    int r;
+    
+    DEBUG_PRINT("capture_inject");
+    GetCapture(self, cap);
+
+    Check_Type(v_buf, T_STRING);
+    buf = (void *)RSTRING(v_buf)->ptr;
+    bufsiz = RSTRING(v_buf)->len;
+    
+    r = pcap_inject(cap->pcap, buf, bufsiz);
+    if (0 > r) {
+        rb_raise(ePcapError, "pcap_inject failure: %s", pcap_geterr(cap->pcap));
+    }
+    if (bufsiz != r) {
+        rb_raise(ePcapError, "pcap_inject expected to write %d but actually wrote %d", bufsiz, r);
+    }
+    return Qnil;
+}
+
 /*
  * Dumper object
  */
@@ -807,6 +834,7 @@ Init_pcap(void)
     rb_define_method(cCapture, "snapshot", capture_snapshot, 0);
     rb_define_method(cCapture, "snaplen", capture_snapshot, 0);
     rb_define_method(cCapture, "stats", capture_stats, 0);
+    rb_define_method(cCapture, "inject", capture_inject, 1);
 
     /* define class Dumper */
     cDumper = rb_define_class_under(mPcap, "Dumper", rb_cObject);
