@@ -217,6 +217,52 @@ capture_open_offline(class, fname)
 }
 
 static VALUE
+capture_open_dead(argc, argv, class)
+     int argc;
+     VALUE *argv;
+     VALUE class;
+{
+    VALUE self;
+    struct capture_object *cap;
+    pcap_t *pcap;
+    VALUE v_linktype, v_snaplen;
+    int linktype, snaplen;
+    int rs;
+
+    DEBUG_PRINT("capture_open_dead");
+    
+    /* scan arg */
+    rs = rb_scan_args(argc, argv, "02", &v_linktype, &v_snaplen);
+    if (rs >= 1) {
+      Check_Type(v_linktype, T_FIXNUM);
+      linktype = FIX2INT(v_linktype);
+    } else {
+      linktype = DEFAULT_DATALINK;
+    }
+    if (rs == 2) {
+      Check_Type(v_snaplen, T_FIXNUM);
+      snaplen = FIX2INT(v_snaplen);
+    } else {
+      snaplen = DEFAULT_SNAPLEN;
+    }
+    
+    pcap = pcap_open_dead(linktype, snaplen);
+    
+    if (pcap == NULL) {
+      rb_raise(ePcapError, "Error calling pcap_open_dead");
+    }
+
+    /* setup instance */
+    self = Data_Make_Struct(class, struct capture_object,
+                            0, free_capture, cap);
+    cap->pcap = pcap;
+    cap->netmask = 0;
+    cap->dl_type = pcap_datalink(pcap);
+
+    return self;
+}
+
+static VALUE
 capture_close(self)
      VALUE self;
 {
@@ -750,6 +796,7 @@ Init_pcap(void)
     rb_include_module(cCapture, rb_mEnumerable);
     rb_define_singleton_method(cCapture, "open_live", capture_open_live, -1);
     rb_define_singleton_method(cCapture, "open_offline", capture_open_offline, 1);
+    rb_define_singleton_method(cCapture, "open_dead", capture_open_dead, -1);
     rb_define_method(cCapture, "close", capture_close, 0);
     rb_define_method(cCapture, "dispatch", capture_dispatch, -1);
     rb_define_method(cCapture, "loop", capture_loop, -1);
