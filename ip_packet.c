@@ -25,31 +25,31 @@ setup_ip_packet(pkt, nl_len)
     DEBUG_PRINT("setup_ip_packet");
 
     if (nl_len > 0 && IP_HDR(pkt)->ip_v != 4) {
-	return cPacket;
+        return cPacket;
     }
 
     class = cIPPacket;
     nl_len = MIN(nl_len, ntohs(IP_HDR(pkt)->ip_len));
     if (nl_len > 20) {
-	int hl = IP_HDR(pkt)->ip_hl * 4;
-	int tl_len = nl_len - hl;
-	if (tl_len > 0) {
-	    pkt->hdr.layer4_off = pkt->hdr.layer3_off + hl;
-	    /* if this is fragment zero, setup upper layer */
-	    if ((ntohs(IP_HDR(pkt)->ip_off) & IP_OFFMASK) == 0) {
-		switch (IP_HDR(pkt)->ip_p) {
-		case IPPROTO_TCP:
-		    class = setup_tcp_packet(pkt, tl_len);
-		    break;
-		case IPPROTO_UDP:
-		    class = setup_udp_packet(pkt, tl_len);
-		    break;
-		case IPPROTO_ICMP:
-		    class = setup_icmp_packet(pkt, tl_len);
-		    break;
-		}		
-	    }
-	}
+        int hl = IP_HDR(pkt)->ip_hl * 4;
+        int tl_len = nl_len - hl;
+        if (tl_len > 0) {
+            pkt->hdr.layer4_off = pkt->hdr.layer3_off + hl;
+            /* if this is fragment zero, setup upper layer */
+            if ((ntohs(IP_HDR(pkt)->ip_off) & IP_OFFMASK) == 0) {
+                switch (IP_HDR(pkt)->ip_p) {
+                case IPPROTO_TCP:
+                    class = setup_tcp_packet(pkt, tl_len);
+                    break;
+                case IPPROTO_UDP:
+                    class = setup_udp_packet(pkt, tl_len);
+                    break;
+                case IPPROTO_ICMP:
+                    class = setup_icmp_packet(pkt, tl_len);
+                    break;
+                }               
+            }
+        }
     }
 
     return class;
@@ -105,11 +105,11 @@ ipp_sumok(self)
     sum = 0;
     hlen /= 2; /* 16-bit word */
     for (i = 0; i < hlen; i++) {
-	sum += ntohs(ipus[i]);
-	sum = (sum & 0xffff) + (sum >> 16);
+        sum += ntohs(ipus[i]);
+        sum = (sum & 0xffff) + (sum >> 16);
     }
     if (sum == 0xffff)
-	return Qtrue;
+        return Qtrue;
     return Qfalse;
 }
 
@@ -168,30 +168,30 @@ ipaddr_s_new(self, val)
 
     switch(TYPE(val)) {
     case T_STRING:
-	hname = RSTRING(val)->ptr;
-	hent = gethostbyname(hname);
-	if (hent == NULL) {
-	    extern int h_errno;
-	    switch (h_errno) {
-	    case HOST_NOT_FOUND:
-		rb_raise(ePcapError, "host not found: %s", hname);
-		break;
-	    default:
+        hname = RSTRING(val)->ptr;
+        hent = gethostbyname(hname);
+        if (hent == NULL) {
+            extern int h_errno;
+            switch (h_errno) {
+            case HOST_NOT_FOUND:
+                rb_raise(ePcapError, "host not found: %s", hname);
+                break;
+            default:
 #ifdef HAVE_HSTRERROR
-		rb_raise(ePcapError, (char *)hstrerror(h_errno));
+                rb_raise(ePcapError, (char *)hstrerror(h_errno));
 #else
-		rb_raise(ePcapError, "host not found: %s", hname);
+                rb_raise(ePcapError, "host not found: %s", hname);
 #endif
-	    }
-	}
-	addr = *(struct in_addr *)hent->h_addr;
-	break;
+            }
+        }
+        addr = *(struct in_addr *)hent->h_addr;
+        break;
     case T_FIXNUM:
     case T_BIGNUM:
-	addr.s_addr = htonl(NUM2ULONG(val));
-	break;
+        addr.s_addr = htonl(NUM2ULONG(val));
+        break;
     default:
-	rb_raise(rb_eTypeError, "String or Integer required");
+        rb_raise(rb_eTypeError, "String or Integer required");
     }
     return new_ipaddr(&addr);
 }
@@ -226,7 +226,7 @@ ipaddr_hostname(self)
     GetIPAddress(self, addr);
     host = gethostbyaddr((char *)&addr->s_addr, sizeof addr->s_addr, AF_INET);
     if (host == NULL)
-	return ipaddr_num_s(self);
+        return ipaddr_num_s(self);
     return rb_str_new2(host->h_name);
 }
 
@@ -235,9 +235,9 @@ ipaddr_to_s(self)
     VALUE self;
 {
     if (RTEST(rbpcap_convert))
-	return ipaddr_hostname(self);
+        return ipaddr_hostname(self);
     else
-	return ipaddr_num_s(self);
+        return ipaddr_num_s(self);
 }
 
 static VALUE
@@ -249,9 +249,9 @@ ipaddr_equal(self, other)
 
     GetIPAddress(self, addr1);
     if (rb_class_of(other) == cIPAddress) {
-	GetIPAddress(other, addr2);
-	if (addr1->s_addr == addr2->s_addr)
-	    return Qtrue;
+        GetIPAddress(other, addr2);
+        if (addr1->s_addr == addr2->s_addr)
+            return Qtrue;
     }
     return Qfalse;
 }
@@ -286,11 +286,11 @@ ipaddr_s_load(klass, str)
     int i;
 
     if (RSTRING(str)->len != sizeof addr) {
-	rb_raise(rb_eArgError, "dump format error (IPAddress)");
+        rb_raise(rb_eArgError, "dump format error (IPAddress)");
     }
     for (i = 0; i < sizeof addr; i++) {
-	((char *)&addr)[i] = RSTRING(str)->ptr[i];
-    }	
+        ((char *)&addr)[i] = RSTRING(str)->ptr[i];
+    }   
     return new_ipaddr(&addr);
 }
 
