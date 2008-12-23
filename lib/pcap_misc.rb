@@ -6,7 +6,7 @@ module Pcap
     end
 
     def inspect
-      "#<#{type}: #{self}>"
+      "#<#{self.class}: #{self}>"
     end
   end
 
