@@ -240,6 +240,23 @@ packet_set_udata(self, val)
 }
 
 static VALUE
+packet_set_time_i(self, val)
+     VALUE self;
+     VALUE val;
+{
+     struct packet_object *pkt;
+     unsigned int time_i;
+
+     DEBUG_PRINT("packet_set_time_i");
+     GetPacket(self, pkt);
+     Check_Type(val, T_BIGNUM);
+     time_i = NUM2UINT(val);
+
+     pkt->hdr.pkthdr.ts.tv_sec = time_i;
+     return val;
+}
+
+static VALUE
 packet_match(self, expr)
      VALUE self;
      VALUE expr;
@@ -299,6 +316,7 @@ Init_packet(void)
     rb_define_method(cPacket, "caplen", packet_caplen, 0);
     rb_define_method(cPacket, "time", packet_time, 0);
     rb_define_method(cPacket, "time_i", packet_time_i, 0);
+    rb_define_method(cPacket, "time_i=", packet_set_time_i, 1);
     rb_define_method(cPacket, "raw_data", packet_raw_data, 0);
     rb_define_method(cPacket, "=~", packet_match, 1);
 
