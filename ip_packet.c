@@ -85,6 +85,38 @@ IPP_METHOD(ipp_sum,   12, INT2FIX(ntohs(ip->ip_sum)))
 IPP_METHOD(ipp_src,   16, new_ipaddr(&ip->ip_src))
 IPP_METHOD(ipp_dst,   20, new_ipaddr(&ip->ip_dst))
 
+
+#define IPP_SET_METHOD(func, need, member) \
+static VALUE \
+(func)(self, val) \
+     VALUE self; \
+     VALUE val; \
+{ \
+     struct packet_object *pkt; \
+     struct ip *ip; \
+\
+     DEBUG_PRINT(#func); \
+     GetPacket(self, pkt); \
+     CheckTruncateIp(pkt, (need)); \
+     ip = IP_HDR(pkt); \
+\
+     switch(TYPE(val)) { \
+     case T_STRING: \
+       (member).s_addr = inet_addr(RSTRING(val)->ptr); \
+       break; \
+     case T_BIGNUM: \
+       (member).s_addr = NUM2UINT(val); \
+       break; \
+     case T_DATA: \
+       (member).s_addr = ((struct in_addr *)&(DATA_PTR(val)))->s_addr; \
+     } \
+     return val; \
+}
+
+
+IPP_SET_METHOD(ipp_set_src, 16, ip->ip_src)
+IPP_SET_METHOD(ipp_set_dst, 20, ip->ip_dst)
+
 static VALUE
 ipp_sumok(self)
      VALUE self;
@@ -316,8 +348,12 @@ Init_ip_packet(void)
     rb_define_method(cIPPacket, "ip_sumok?", ipp_sumok, 0);
     rb_define_method(cIPPacket, "ip_src", ipp_src, 0);
     rb_define_method(cIPPacket, "src", ipp_src, 0);
+    rb_define_method(cIPPacket, "ip_src=", ipp_set_src, 1);
+    rb_define_method(cIPPacket, "src=", ipp_set_src, 1);
     rb_define_method(cIPPacket, "ip_dst", ipp_dst, 0);
     rb_define_method(cIPPacket, "dst", ipp_dst, 0);
+    rb_define_method(cIPPacket, "ip_dst=", ipp_set_dst, 1);
+    rb_define_method(cIPPacket, "dst=", ipp_set_dst, 1);
     rb_define_method(cIPPacket, "ip_data", ipp_data, 0);
 
     cIPAddress = rb_define_class_under(mPcap, "IPAddress", rb_cObject);
