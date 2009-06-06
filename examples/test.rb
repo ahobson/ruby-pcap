@@ -1,4 +1,5 @@
-#!/usr/local/bin/ruby
+#!/usr/bin/env ruby
+require 'rubygems'
 require 'pcap'
 
 dev = Pcap.lookupdev
