@@ -249,7 +249,7 @@ packet_set_time_i(self, val)
 
      DEBUG_PRINT("packet_set_time_i");
      GetPacket(self, pkt);
-     Check_Type(val, T_BIGNUM);
+     Check_Type(val, T_FIXNUM);
      time_i = NUM2UINT(val);
 
      pkt->hdr.pkthdr.ts.tv_sec = time_i;
