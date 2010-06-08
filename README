@@ -7,7 +7,7 @@ This library also includes classes to access TCP/IP header.
 
 Requirements:
 
-  - ruby-1.4.x
+  - ruby-1.8.x
   - libpcap (http://www.tcpdump.org/)
 
 Compile:
@@ -15,18 +15,8 @@ Compile:
 If ruby supports dynamic link of extension module on your OS,
 following commands will install ruby-pcap.
 
-  ruby extconf.rb [options]
-  make
-  make install
-
-You can specify options when you run 'ruby extconf.rb':
-
-`--with-pcap-dir=PREFIX'
-    Directory where libpcap is installed.  Default is '/usr/local'.
-
-If dynamic link isn't available, you can link ruby-pcap statically
-with ruby.  Extract ruby-pcap under the directory 'ext' in ruby source
-tree, then build ruby.
+  rake build
+  sudo gem install pkg/pcap*.gem
 
 * Usage
 
@@ -36,6 +26,9 @@ Directory 'examples' contains some simple scripts.
 * Author
 
 Masaki Fukushima <fukusima@goto.info.waseda.ac.jp>
+
+* Modifications by
+Andrew Hobson <ahobson@gmail.com>
 
 ruby-pcap is copyrighted free software by Masaki Fukushima.
 
