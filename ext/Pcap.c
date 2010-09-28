@@ -168,7 +168,7 @@ capture_open_live(argc, argv, class)
 
     /* device */
     Check_SafeStr(v_device);
-    device = RSTRING(v_device)->ptr;
+    device = RSTRING_PTR(v_device);
     /* snaplen */
     if (rs >= 2) {
         Check_Type(v_snaplen, T_FIXNUM);
@@ -224,7 +224,7 @@ capture_open_offline(class, fname)
 
     /* open offline */
     Check_SafeStr(fname);
-    pcap = pcap_open_offline(RSTRING(fname)->ptr, pcap_errbuf);
+    pcap = pcap_open_offline(RSTRING_PTR(fname), pcap_errbuf);
     if (pcap == NULL) {
         rb_raise(ePcapError, "%s", pcap_errbuf);
     }
@@ -431,7 +431,7 @@ capture_setfilter(argc, argv, self)
         filter = f->expr;
     } else {
         Check_Type(vfilter, T_STRING);
-        filter = RSTRING(vfilter)->ptr;
+        filter = RSTRING_PTR(vfilter);
     }
     opt = RTEST(optimize);
 
@@ -505,8 +505,8 @@ capture_inject(self, v_buf)
     GetCapture(self, cap);
 
     Check_Type(v_buf, T_STRING);
-    buf = (void *)RSTRING(v_buf)->ptr;
-    bufsiz = RSTRING(v_buf)->len;
+    buf = (void *)RSTRING_PTR(v_buf);
+    bufsiz = RSTRING_LEN(v_buf);
     
     r = pcap_inject(cap->pcap, buf, bufsiz);
     if (0 > r) {
@@ -570,7 +570,7 @@ dumper_open(class, v_cap, v_fname)
     GetCapture(v_cap, cap);
     Check_SafeStr(v_fname);
 
-    pcap_dumper = pcap_dump_open(cap->pcap, RSTRING(v_fname)->ptr);
+    pcap_dumper = pcap_dump_open(cap->pcap, RSTRING_PTR(v_fname));
     if (pcap_dumper == NULL) {
         rb_raise(ePcapError, "dumper_open: %s", pcap_geterr(cap->pcap));
     }
@@ -633,11 +633,11 @@ dumper_dump_raw(self, v_buf)
     GetDumper(self, dumper);
     
     Check_Type(v_buf, T_STRING);
-    buf = (void *)RSTRING(v_buf)->ptr;
+    buf = (void *)RSTRING_PTR(v_buf);
     
     gettimeofday(&(pkt_hdr.ts), NULL);
     pkt_hdr.caplen = dumper->snaplen;
-    pkt_hdr.len = RSTRING(v_buf)->len;
+    pkt_hdr.len = RSTRING_LEN(v_buf);
     
     pcap_dump((u_char *)dumper->pcap_dumper, &pkt_hdr, buf);
     return Qnil;

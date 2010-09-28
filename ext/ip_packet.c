@@ -102,7 +102,7 @@ static VALUE \
 \
      switch(TYPE(val)) { \
      case T_STRING: \
-       (member).s_addr = inet_addr(RSTRING(val)->ptr); \
+       (member).s_addr = inet_addr(RSTRING_PTR(val)); \
        break; \
      case T_BIGNUM: \
        (member).s_addr = NUM2UINT(val); \
@@ -200,7 +200,7 @@ ipaddr_s_new(self, val)
 
     switch(TYPE(val)) {
     case T_STRING:
-        hname = RSTRING(val)->ptr;
+        hname = RSTRING_PTR(val);
         hent = gethostbyname(hname);
         if (hent == NULL) {
             extern int h_errno;
@@ -317,11 +317,11 @@ ipaddr_s_load(klass, str)
     struct in_addr addr;
     int i;
 
-    if (RSTRING(str)->len != sizeof addr) {
+    if (RSTRING_LEN(str) != sizeof addr) {
         rb_raise(rb_eArgError, "dump format error (IPAddress)");
     }
     for (i = 0; i < sizeof addr; i++) {
-        ((char *)&addr)[i] = RSTRING(str)->ptr[i];
+        ((char *)&addr)[i] = RSTRING_PTR(str)[i];
     }   
     return new_ipaddr(&addr);
 }

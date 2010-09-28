@@ -147,7 +147,7 @@ packet_load(class, str)
 
     DEBUG_PRINT("packet_load");
 
-    str_ptr = RSTRING(str)->ptr;
+    str_ptr = RSTRING_PTR(str);
     hdr = (struct packet_object_header *)str_ptr;
     version = hdr->version;
     if (version == PACKET_MARSHAL_VERSION) {
@@ -175,7 +175,7 @@ packet_load(class, str)
         memcpy(pkt->data, str_ptr + sizeof(*hdr), caplen);
         if (PKTFLAG_TEST(pkt, POH_UDATA)) {
             int l = sizeof(*hdr) + caplen;
-            VALUE ustr = rb_str_substr(str, l, RSTRING(str)->len - l);
+            VALUE ustr = rb_str_substr(str, l, RSTRING_LEN(str) - l);
             pkt->udata = rb_funcall(mMarshal, id_load, 1, ustr);
         } else {
             pkt->udata = Qnil;
