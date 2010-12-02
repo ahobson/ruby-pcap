@@ -340,8 +340,6 @@ capture_dispatch(argc, argv, self)
     return INT2FIX(ret);
 }
 
-int pcap_read(pcap_t *, int cnt, pcap_handler, u_char *); /* pcap-int.h */
-
 static VALUE
 capture_loop(argc, argv, self)
      int argc;
@@ -388,7 +386,7 @@ capture_loop(argc, argv, self)
                     rb_thread_wait_fd(fd);
                 }
                 TRAP_BEG;
-                ret = pcap_read(cap->pcap, 1, handler, (u_char *)cap);
+                ret = pcap_dispatch(cap->pcap, 1, handler, (u_char *)cap);
                 TRAP_END;
             } while (ret == 0);
             if (ret <= 0)
