@@ -85,7 +85,7 @@ pcap_s_lookupnet(self, dev)
     struct in_addr addr;
 
     Check_Type(dev, T_STRING);
-    if (pcap_lookupnet(STR2CSTR(dev), &net, &mask, pcap_errbuf) == -1) {
+    if (pcap_lookupnet(StringValuePtr(dev), &net, &mask, pcap_errbuf) == -1) {
         rb_raise(ePcapError, "%s", pcap_errbuf);
     }
 
@@ -685,7 +685,7 @@ filter_new(argc, argv, class)
                      &v_optimize, &v_netmask);
     /* filter expression */
     Check_Type(v_expr, T_STRING);
-    expr = STR2CSTR(v_expr);
+    expr = StringValuePtr(v_expr);
     /* capture object */
     if (IsKindOf(v_capture, cCapture)) {
         CheckClass(v_capture, cCapture);
