@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{pcap}
-  s.version = "0.7.3"
+  s.version = "0.7.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Masaki Fukushima", "Andrew Hobson"]
-  s.date = %q{2010-12-02}
+  s.date = %q{2011-02-17}
   s.description = %q{Ruby interface to LBL Packet Capture library. This library also includes classes to access packet header fields.}
   s.email = %q{fukusima@goto.info.waseda.ac.jp}
   s.extensions = ["ext/extconf.rb"]
@@ -72,14 +72,14 @@ Gem::Specification.new do |s|
   s.homepage = %q{http://www.goto.info.waseda.ac.jp/~fukusima/ruby/pcap-e.html}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.3.7}
+  s.rubygems_version = %q{1.3.6}
   s.summary = %q{Interface to LBL Packet Capture library (libpcap)}
 
   if s.respond_to? :specification_version then
     current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
     s.specification_version = 3
 
-    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+    if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
     else
     end
   else

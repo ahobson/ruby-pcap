@@ -12,6 +12,8 @@
 VALUE cIPPacket;
 static VALUE cIPAddress;
 
+static unsigned short in_cksum(unsigned char *data, int len);
+
 #define CheckTruncateIp(pkt, need) \
     CheckTruncate(pkt, pkt->hdr.layer3_off, need, "truncated IP")
 
@@ -110,6 +112,8 @@ static VALUE \
      case T_DATA: \
        (member).s_addr = ((struct in_addr *)&(DATA_PTR(val)))->s_addr; \
      } \
+     ip->ip_sum = 0; \
+     ip->ip_sum = in_cksum((unsigned char *)ip, ip->ip_hl*4); \
      return val; \
 }
 
@@ -144,6 +148,45 @@ ipp_sumok(self)
         return Qtrue;
     return Qfalse;
 }
+
+static unsigned short
+in_cksum(unsigned char *data, int len)
+{
+    long sum = 0;  /* assume 32 bit long, 16 bit short */
+    unsigned short *temp = (unsigned short *)data;
+
+    while(len > 1){
+        sum += *temp++;
+        if(sum & 0x80000000)   /* if high order bit set, fold */
+            sum = (sum & 0xFFFF) + (sum >> 16);
+        len -= 2;
+    }
+    if(len)       /* take care of left over byte */
+        sum += (unsigned short) *((unsigned char *)temp);
+
+    while(sum>>16)
+        sum = (sum & 0xFFFF) + (sum >> 16);
+
+   return ~sum;
+}
+
+
+static VALUE
+ipp_sum_update(self)
+     VALUE self;
+{
+    struct packet_object *pkt;
+    struct ip *ip;
+
+    GetPacket(self, pkt);
+    CheckTruncateIp(pkt, 20);
+    ip = IP_HDR(pkt);
+
+    ip->ip_sum = 0;
+    ip->ip_sum = in_cksum((unsigned char *)ip, ip->ip_hl*4);
+    return INT2FIX(ntohs(ip->ip_sum));
+}
+
 
 static VALUE
 ipp_data(self)
@@ -186,6 +229,8 @@ new_ipaddr(addr)
     self = Data_Wrap_Struct(cIPAddress, 0, 0, (void *)addr->s_addr);
     return self;
 }
+
+
 
 #ifndef INADDR_NONE
 # define INADDR_NONE (0xffffffff)
@@ -355,6 +400,7 @@ Init_ip_packet(void)
     rb_define_method(cIPPacket, "ip_dst=", ipp_set_dst, 1);
     rb_define_method(cIPPacket, "dst=", ipp_set_dst, 1);
     rb_define_method(cIPPacket, "ip_data", ipp_data, 0);
+    rb_define_method(cIPPacket, "ip_sum_update!", ipp_sum_update, 0);
 
     cIPAddress = rb_define_class_under(mPcap, "IPAddress", rb_cObject);
     rb_define_singleton_method(cIPAddress, "new", ipaddr_s_new, 1);

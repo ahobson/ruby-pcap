@@ -16,6 +16,7 @@ lib/pcaplet.rb
 examples/test.rb
 examples/tcpdump.rb
 examples/httpdump.rb
+examples/rewrite_time.rb
 doc/index.html
 doc/Pcap.html
 doc/Capture.html
