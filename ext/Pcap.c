@@ -338,13 +338,13 @@ capture_dispatch(argc, argv, self)
         ignore_trap = -1;
     }
 
-    if (ignore_trap == -1) {
-      TRAP_BEG;
-      ret = pcap_dispatch(cap->pcap, cnt, handler, (u_char *)cap);
-      TRAP_END;
+    if (ignore_trap > -1) {
+        ret = pcap_dispatch(cap->pcap, cnt, handler, (u_char *)cap);
     }
     else {
-      ret = pcap_dispatch(cap->pcap, cnt, handler, (u_char *)cap);
+        TRAP_BEG;
+        ret = pcap_dispatch(cap->pcap, cnt, handler, (u_char *)cap);
+        TRAP_END;
     }
     if (ret == -1)
         rb_raise(ePcapError, "dispatch: %s", pcap_geterr(cap->pcap));
@@ -382,13 +382,13 @@ capture_loop(argc, argv, self)
     }
 
     if (pcap_file(cap->pcap) != NULL) {
-      if (ignore_trap == -1) {
+      if (ignore_trap > -1) {
+          ret = pcap_loop(cap->pcap, cnt, handler, (u_char *)cap);
+      }
+      else {
           TRAP_BEG;
           ret = pcap_loop(cap->pcap, cnt, handler, (u_char *)cap);
           TRAP_END;
-      }
-      else {
-          ret = pcap_loop(cap->pcap, cnt, handler, (u_char *)cap);
       }
     }
     else {
@@ -405,13 +405,13 @@ capture_loop(argc, argv, self)
                 if (select(fd+1, &rset, NULL, NULL, &tm) == 0) {
                     rb_thread_wait_fd(fd);
                 }
-                if (ignore_trap == -1) {
+                if (ignore_trap > -1) {
+                    ret = pcap_dispatch(cap->pcap, 1, handler, (u_char *)cap);
+                }
+                else {
                     TRAP_BEG;
                     ret = pcap_dispatch(cap->pcap, 1, handler, (u_char *)cap);
                     TRAP_END;
-                }
-                else {
-                    ret = pcap_dispatch(cap->pcap, 1, handler, (u_char *)cap);
                 }
             } while (ret == 0);
 
