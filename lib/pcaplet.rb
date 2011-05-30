@@ -86,20 +86,24 @@ module Pcap
     def each_packet(&block)
       begin
         duplicated = (RUBY_PLATFORM =~ /linux/ && @device == "lo")
+        is_os_x = RUBY_PLATFORM.match(/.*darwin.*/)
+        shouldnt_trap = is_os_x && (! RUBY_VERSION.match(/^1\.9.*/).nil?)
+        shouldnt_trap = shouldnt_trap ? 1 : -1
+
         unless duplicated
-          @capture.loop(@count, &block)
+          @capture.loop(@count, shouldnt_trap, &block)
         else
           flip = true
           @capture.loop(@count) do |pkt|
             flip = (! flip)
             next if flip
+
             block.call pkt
           end
         end
-      rescue Interrupt
-        $stdout.flush
-        $stderr.puts("Interrupted.")
-        $stderr.puts $@.join("\n\t") if $DEBUG
+      rescue Exception => e
+        $stderr.puts "exception when looping over each packet loop: #{e.inspect}"
+        raise
       ensure
         # print statistics if live
         if @device

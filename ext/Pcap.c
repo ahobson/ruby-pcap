@@ -317,23 +317,35 @@ capture_dispatch(argc, argv, self)
 {
     VALUE v_cnt;
     int cnt;
+    VALUE v_ignore_trap;
+    int ignore_trap;
     struct capture_object *cap;
     int ret;
 
     DEBUG_PRINT("capture_dispatch");
     GetCapture(self, cap);
 
-
     /* scan arg */
-    if (rb_scan_args(argc, argv, "01", &v_cnt) >= 1) {
+
+    if (rb_scan_args(argc, argv, "11", &v_cnt, &v_ignore_trap) >= 2) {
         FIXNUM_P(v_cnt);
         cnt = FIX2INT(v_cnt);
-    } else
-        cnt = -1;
 
-    TRAP_BEG;
-    ret = pcap_dispatch(cap->pcap, cnt, handler, (u_char *)cap);
-    TRAP_END;
+        FIXNUM_P(v_ignore_trap);
+        ignore_trap = FIX2INT(v_ignore_trap);
+    } else {
+        cnt = -1;
+        ignore_trap = -1;
+    }
+
+    if (ignore_trap == -1) {
+      TRAP_BEG;
+      ret = pcap_dispatch(cap->pcap, cnt, handler, (u_char *)cap);
+      TRAP_END;
+    }
+    else {
+      ret = pcap_dispatch(cap->pcap, cnt, handler, (u_char *)cap);
+    }
     if (ret == -1)
         rb_raise(ePcapError, "dispatch: %s", pcap_geterr(cap->pcap));
 
@@ -348,30 +360,38 @@ capture_loop(argc, argv, self)
 {
     VALUE v_cnt;
     int cnt;
+    VALUE v_ignore_trap;
+    int ignore_trap;
     struct capture_object *cap;
     int ret;
 
     DEBUG_PRINT("capture_loop");
     GetCapture(self, cap);
 
-
     /* scan arg */
-    if (rb_scan_args(argc, argv, "01", &v_cnt) >= 1) {
+    if (rb_scan_args(argc, argv, "11", &v_cnt, &v_ignore_trap) >= 1) {
         FIXNUM_P(v_cnt);
         cnt = FIX2INT(v_cnt);
-    } else
-        cnt = -1;
 
-#if 0
-    TRAP_BEG;
-    ret = pcap_loop(cap->pcap, cnt, handler, (u_char *)cap);
-    TRAP_END;
-#else
+        FIXNUM_P(v_ignore_trap);
+        ignore_trap = FIX2INT(v_cnt);
+    }
+    else {
+        cnt = -1;
+        ignore_trap = -1;
+    }
+
     if (pcap_file(cap->pcap) != NULL) {
-        TRAP_BEG;
-        ret = pcap_loop(cap->pcap, cnt, handler, (u_char *)cap);
-        TRAP_END;
-    } else {
+      if (ignore_trap == -1) {
+          TRAP_BEG;
+          ret = pcap_loop(cap->pcap, cnt, handler, (u_char *)cap);
+          TRAP_END;
+      }
+      else {
+          ret = pcap_loop(cap->pcap, cnt, handler, (u_char *)cap);
+      }
+    }
+    else {
         int fd = pcap_fileno(cap->pcap);
         fd_set rset;
         struct timeval tm;
@@ -385,10 +405,16 @@ capture_loop(argc, argv, self)
                 if (select(fd+1, &rset, NULL, NULL, &tm) == 0) {
                     rb_thread_wait_fd(fd);
                 }
-                TRAP_BEG;
-                ret = pcap_dispatch(cap->pcap, 1, handler, (u_char *)cap);
-                TRAP_END;
+                if (ignore_trap == -1) {
+                    TRAP_BEG;
+                    ret = pcap_dispatch(cap->pcap, 1, handler, (u_char *)cap);
+                    TRAP_END;
+                }
+                else {
+                    ret = pcap_dispatch(cap->pcap, 1, handler, (u_char *)cap);
+                }
             } while (ret == 0);
+
             if (ret <= 0)
                 break;
             if (cnt > 0) {
@@ -398,7 +424,7 @@ capture_loop(argc, argv, self)
             }
         }
     }
-#endif
+
     return INT2FIX(ret);
 }
 
