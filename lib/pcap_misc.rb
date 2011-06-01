@@ -34,6 +34,18 @@ module Pcap
     def to_s
       "#{src}:#{sport} > #{dst}:#{dport} #{tcp_flags_s}"
     end
+
+    def src_mac_address
+      return unpack_hex_string(raw_data[6, 12])
+    end
+
+    def dst_mac_address
+      return unpack_hex_string(raw_data[0, 6])
+    end
+
+    def unpack_hex_string(hex)
+      return hex.unpack('H2H2H2H2H2H2').reverse.join('')
+    end
   end
 
   class UDPPacket
