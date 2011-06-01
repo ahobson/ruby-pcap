@@ -68,54 +68,6 @@ module Pcap
   TcpPacket = TCPPacket
   UdpPacket = UDPPacket
 
-  # IpAddress is now obsolete.
-  # New class IPAddress is implemented in C.
-=begin
-  class IpAddress
-    def initialize(a)
-      raise AurgumentError unless a.is_a?(Integer)
-      @addr = a
-    end
-
-    def to_i
-      return @addr
-    end
-
-    def ==(other)
-      @addr == other.to_i
-    end
-
-    alias === ==
-    alias eql? ==
-
-    def to_num_s
-        return ((@addr >> 24) & 0xff).to_s + "." +
-          ((@addr >> 16) & 0xff).to_s + "." +
-          ((@addr >> 8) & 0xff).to_s + "." +
-          (@addr & 0xff).to_s;
-    end
-
-    def hostname
-      addr = self.to_num_s
-      # "require 'socket'" is here because of the order of
-      #   ext initialization in static linked binary
-      require 'socket'
-      begin
-	return Socket.gethostbyname(addr)[0]
-      rescue SocketError
-	return addr
-      end
-    end
-
-    def to_s
-      if Pcap.convert?
-        return hostname
-      else
-        return to_num_s
-      end
-    end
-  end
-=end
 end
 
 class Time
