@@ -44,7 +44,7 @@ module Pcap
     end
 
     def unpack_hex_string(hex)
-      return hex.unpack('H2H2H2H2H2H2').reverse.join('')
+      return hex.unpack('H2H2H2H2H2H2').join('')
     end
   end
 
