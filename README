@@ -7,7 +7,7 @@ This library also includes classes to access TCP/IP header.
 
 Requirements:
 
-  - ruby-1.8.x
+  - ruby-1.8.x or ruby-1.9.2
   - libpcap (http://www.tcpdump.org/)
 
 Compile:
