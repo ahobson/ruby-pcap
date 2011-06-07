@@ -30,6 +30,9 @@ Masaki Fukushima <fukusima@goto.info.waseda.ac.jp>
 * Modifications by
 Andrew Hobson <ahobson@gmail.com>
 
+* Ruby 1.9.2 support by
+Tim Jarratt <tjarratt@gmail.com>
+
 ruby-pcap is copyrighted free software by Masaki Fukushima.
 
 You can redistribute it and/or modify it under the terms of
