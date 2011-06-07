@@ -28,6 +28,8 @@ module Pcap
       @rfile = nil
       @count = -1
       @snaplen = 68
+      @log_packets = false
+
       opts = OptionParser.new do |opts|
         opts.on('-d') {$DEBUG = true}
         opts.on('-v') {$VERBOSE = true}
@@ -36,13 +38,14 @@ module Pcap
         opts.on('-r FILE') {|s| @rfile = s}
         opts.on('-c COUNT', OptionParser::DecimalInteger) {|i| @count = i}
         opts.on('-s LEN', OptionParser::DecimalInteger) {|i| @snaplen = i}
+        opts.on('-l', ) { @log_packets = true}
       end
       begin
         opts.parse!
       rescue
         usage(1)
       end
-      
+
       @filter = ARGV.join(' ')
 
       # check option consistency
@@ -106,7 +109,7 @@ module Pcap
         raise
       ensure
         # print statistics if live
-        if @device
+        if @device && @log_packets
           stat = @capture.stats
           if stat
             $stderr.print("#{stat.recv} packets received by filter\n");
