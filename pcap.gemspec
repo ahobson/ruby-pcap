@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{pcap}
-  s.version = "0.7.6"
+  s.version = "0.7.7"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Masaki Fukushima}, %q{Andrew Hobson}]
-  s.date = %q{2011-06-09}
+  s.date = %q{2011-06-10}
   s.description = %q{Ruby interface to LBL Packet Capture library. This library also includes classes to access packet header fields.}
   s.email = %q{fukusima@goto.info.waseda.ac.jp}
   s.extensions = [%q{ext/extconf.rb}]
