@@ -7,6 +7,10 @@ pcap_libdir     = with_config("pcap-libdir", pcap_dir + "/lib")
 $CFLAGS  = "-I#{pcap_includedir}"
 $LDFLAGS = "-L#{pcap_libdir}"
 
+if RUBY_PLATFORM.match(/.*darwin.*/) && RUBY_VERSION.match(/^1\.9.*/)
+  $defs.push("-DPCAP_DONT_TRAP=1")
+end
+
 have_library("socket", "socket")
 have_library("xnet", "gethostbyname")
 have_func("hstrerror")
