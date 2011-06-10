@@ -39,7 +39,7 @@ module Pcap
         opts.on('-r FILE') {|s| @rfile = s}
         opts.on('-c COUNT', OptionParser::DecimalInteger) {|i| @count = i}
         opts.on('-s LEN', OptionParser::DecimalInteger) {|i| @snaplen = i}
-        opts.on('-l', ) { @log_packets = true}
+        opts.on('-l') { @log_packets = true }
       end
       begin
         opts.parse!
