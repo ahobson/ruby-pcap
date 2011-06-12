@@ -29,6 +29,7 @@ module Pcap
       @count = -1
       @snaplen = 68
       @log_packets = false
+      @duplicated = nil
 
       opts = OptionParser.new do |opts|
         opts.on('-d') {$DEBUG = true}
@@ -38,7 +39,7 @@ module Pcap
         opts.on('-r FILE') {|s| @rfile = s}
         opts.on('-c COUNT', OptionParser::DecimalInteger) {|i| @count = i}
         opts.on('-s LEN', OptionParser::DecimalInteger) {|i| @snaplen = i}
-        opts.on('-l', ) { @log_packets = true}
+        opts.on('-l') { @log_packets = true }
       end
       begin
         opts.parse!
@@ -88,13 +89,9 @@ module Pcap
 
     def each_packet(&block)
       begin
-        duplicated = (RUBY_PLATFORM =~ /linux/ && @device == "lo")
-        is_os_x = RUBY_PLATFORM.match(/.*darwin.*/)
-        shouldnt_trap = is_os_x && (! RUBY_VERSION.match(/^1\.9.*/).nil?)
-        shouldnt_trap = shouldnt_trap ? 1 : -1
-
-        unless duplicated
-          @capture.loop(@count, shouldnt_trap, &block)
+        @duplicated ||= (RUBY_PLATFORM =~ /linux/ && @device == "lo")
+        if !@duplicated
+          @capture.loop(@count, &block)
         else
           flip = true
           @capture.loop(@count) do |pkt|
@@ -119,7 +116,7 @@ module Pcap
       end
     end
 
-    alias each each_packet
+    alias :each :each_packet
 
     def close
       @capture.close
