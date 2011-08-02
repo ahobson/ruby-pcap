@@ -16,6 +16,15 @@
 #define DEFAULT_SNAPLEN 68
 #define DEFAULT_PROMISC 1
 #define DEFAULT_TO_MS   1000
+
+#ifdef PCAP_DONT_TRAP
+#define MAYBE_TRAP_BEG do {} while (0)
+#define MAYBE_TRAP_END do {} while (0)
+#else
+#define MAYBE_TRAP_BEG TRAP_BEG
+#define MAYBE_TRAP_END TRAP_END
+#endif
+
 static char pcap_errbuf[PCAP_ERRBUF_SIZE];
 
 VALUE mPcap, rbpcap_convert = Qnil;
@@ -323,19 +332,20 @@ capture_dispatch(argc, argv, self)
     DEBUG_PRINT("capture_dispatch");
     GetCapture(self, cap);
 
-
     /* scan arg */
     if (rb_scan_args(argc, argv, "01", &v_cnt) >= 1) {
         FIXNUM_P(v_cnt);
         cnt = FIX2INT(v_cnt);
-    } else
+    } else {
         cnt = -1;
+    }
 
-    TRAP_BEG;
+    MAYBE_TRAP_BEG;
     ret = pcap_dispatch(cap->pcap, cnt, handler, (u_char *)cap);
-    TRAP_END;
-    if (ret == -1)
+    MAYBE_TRAP_END;
+    if (ret == -1) {
         rb_raise(ePcapError, "dispatch: %s", pcap_geterr(cap->pcap));
+    }
 
     return INT2FIX(ret);
 }
@@ -354,24 +364,20 @@ capture_loop(argc, argv, self)
     DEBUG_PRINT("capture_loop");
     GetCapture(self, cap);
 
-
     /* scan arg */
     if (rb_scan_args(argc, argv, "01", &v_cnt) >= 1) {
         FIXNUM_P(v_cnt);
         cnt = FIX2INT(v_cnt);
-    } else
-        cnt = -1;
-
-#if 0
-    TRAP_BEG;
-    ret = pcap_loop(cap->pcap, cnt, handler, (u_char *)cap);
-    TRAP_END;
-#else
-    if (pcap_file(cap->pcap) != NULL) {
-        TRAP_BEG;
-        ret = pcap_loop(cap->pcap, cnt, handler, (u_char *)cap);
-        TRAP_END;
     } else {
+        cnt = -1;
+    }
+
+    if (pcap_file(cap->pcap) != NULL) {
+        MAYBE_TRAP_BEG;
+        ret = pcap_loop(cap->pcap, cnt, handler, (u_char *)cap);
+        MAYBE_TRAP_END;
+    }
+    else {
         int fd = pcap_fileno(cap->pcap);
         fd_set rset;
         struct timeval tm;
@@ -385,10 +391,11 @@ capture_loop(argc, argv, self)
                 if (select(fd+1, &rset, NULL, NULL, &tm) == 0) {
                     rb_thread_wait_fd(fd);
                 }
-                TRAP_BEG;
+                MAYBE_TRAP_BEG;
                 ret = pcap_dispatch(cap->pcap, 1, handler, (u_char *)cap);
-                TRAP_END;
+                MAYBE_TRAP_END;
             } while (ret == 0);
+
             if (ret <= 0)
                 break;
             if (cnt > 0) {
@@ -398,7 +405,7 @@ capture_loop(argc, argv, self)
             }
         }
     }
-#endif
+
     return INT2FIX(ret);
 }
 
