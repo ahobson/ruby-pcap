@@ -28,6 +28,9 @@ module Pcap
       @rfile = nil
       @count = -1
       @snaplen = 68
+      @log_packets = false
+      @duplicated = nil
+
       opts = OptionParser.new do |opts|
         opts.on('-d') {$DEBUG = true}
         opts.on('-v') {$VERBOSE = true}
@@ -36,13 +39,14 @@ module Pcap
         opts.on('-r FILE') {|s| @rfile = s}
         opts.on('-c COUNT', OptionParser::DecimalInteger) {|i| @count = i}
         opts.on('-s LEN', OptionParser::DecimalInteger) {|i| @snaplen = i}
+        opts.on('-l') { @log_packets = true }
       end
       begin
         opts.parse!
       rescue
         usage(1)
       end
-      
+
       @filter = ARGV.join(' ')
 
       # check option consistency
@@ -85,24 +89,24 @@ module Pcap
 
     def each_packet(&block)
       begin
-        duplicated = (RUBY_PLATFORM =~ /linux/ && @device == "lo")
-        unless duplicated
+        @duplicated ||= (RUBY_PLATFORM =~ /linux/ && @device == "lo")
+        if !@duplicated
           @capture.loop(@count, &block)
         else
           flip = true
           @capture.loop(@count) do |pkt|
             flip = (! flip)
             next if flip
+
             block.call pkt
           end
         end
-      rescue Interrupt
-        $stdout.flush
-        $stderr.puts("Interrupted.")
-        $stderr.puts $@.join("\n\t") if $DEBUG
+      rescue Exception => e
+        $stderr.puts "exception when looping over each packet loop: #{e.inspect}"
+        raise
       ensure
         # print statistics if live
-        if @device
+        if @device && @log_packets
           stat = @capture.stats
           if stat
             $stderr.print("#{stat.recv} packets received by filter\n");
@@ -112,7 +116,7 @@ module Pcap
       end
     end
 
-    alias each each_packet
+    alias :each :each_packet
 
     def close
       @capture.close
