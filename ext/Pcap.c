@@ -76,12 +76,12 @@ pcap_s_findalldevs(self)
 
     if (alldevsp == NULL) // List is empty, probably an error
            rb_raise(ePcapError, "%s", pcap_errbuf);
-    
+
     for (; alldevsp->next != NULL; alldevsp = alldevsp->next)
             rb_ary_push(return_ary, rb_str_new2(alldevsp->name));
 
     pcap_freealldevs(alldevsp);
-    
+
     return return_ary;
 }
 
@@ -262,7 +262,7 @@ capture_open_dead(argc, argv, class)
     int rs;
 
     DEBUG_PRINT("capture_open_dead");
-    
+
     /* scan arg */
     rs = rb_scan_args(argc, argv, "02", &v_linktype, &v_snaplen);
     if (rs >= 1) {
@@ -277,9 +277,9 @@ capture_open_dead(argc, argv, class)
     } else {
       snaplen = DEFAULT_SNAPLEN;
     }
-    
+
     pcap = pcap_open_dead(linktype, snaplen);
-    
+
     if (pcap == NULL) {
       rb_raise(ePcapError, "Error calling pcap_open_dead");
     }
@@ -348,6 +348,23 @@ capture_dispatch(argc, argv, self)
     }
 
     return INT2FIX(ret);
+}
+
+static VALUE
+capture_fh(argc, argv, self)
+     int argc;
+     VALUE *argv;
+     VALUE self;
+{
+    VALUE v_cnt;
+    int cnt;
+    struct capture_object *cap;
+    int ret;
+
+    DEBUG_PRINT("capture_fh");
+    GetCapture(self, cap);
+
+    return rb_funcall(rb_path2class("IO"), rb_intern("new"), 1, INT2FIX(pcap_fileno(cap->pcap)));
 }
 
 static VALUE
@@ -446,7 +463,7 @@ capture_setfilter(argc, argv, self)
         rb_raise(ePcapError, "setfilter: %s", pcap_geterr(cap->pcap));
     if (pcap_setfilter(cap->pcap, &program) < 0)
         rb_raise(ePcapError, "setfilter: %s", pcap_geterr(cap->pcap));
-    
+
     return Qnil;
 }
 
@@ -505,14 +522,14 @@ capture_inject(self, v_buf)
     const void *buf;
     size_t bufsiz;
     int r;
-    
+
     DEBUG_PRINT("capture_inject");
     GetCapture(self, cap);
 
     Check_Type(v_buf, T_STRING);
     buf = (void *)RSTRING_PTR(v_buf);
     bufsiz = RSTRING_LEN(v_buf);
-    
+
     r = pcap_inject(cap->pcap, buf, bufsiz);
     if (0 > r) {
         rb_raise(ePcapError, "pcap_inject failure: %s", pcap_geterr(cap->pcap));
@@ -633,17 +650,17 @@ dumper_dump_raw(self, v_buf)
     struct dumper_object *dumper;
     const u_char *buf;
     struct pcap_pkthdr pkt_hdr;
-    
+
     DEBUG_PRINT("dumper_dump_raw");
     GetDumper(self, dumper);
-    
+
     Check_Type(v_buf, T_STRING);
     buf = (void *)RSTRING_PTR(v_buf);
-    
+
     gettimeofday(&(pkt_hdr.ts), NULL);
     pkt_hdr.caplen = dumper->snaplen;
     pkt_hdr.len = RSTRING_LEN(v_buf);
-    
+
     pcap_dump((u_char *)dumper->pcap_dumper, &pkt_hdr, buf);
     return Qnil;
 }
@@ -801,7 +818,7 @@ filter_or(self, other)
     GetFilter(self, filter);
     GetFilter(other, filter2);
 
-    expr = ALLOCA_N(char, strlen(filter->expr) + strlen(filter2->expr) + 16); 
+    expr = ALLOCA_N(char, strlen(filter->expr) + strlen(filter2->expr) + 16);
     sprintf(expr, "( %s ) or ( %s )", filter->expr, filter2->expr);
     return new_filter(expr, filter->param, filter->optimize, filter->netmask);
 }
@@ -817,7 +834,7 @@ filter_and(self, other)
     GetFilter(self, filter);
     GetFilter(other, filter2);
 
-    expr = ALLOCA_N(char, strlen(filter->expr) + strlen(filter2->expr) + 16); 
+    expr = ALLOCA_N(char, strlen(filter->expr) + strlen(filter2->expr) + 16);
     sprintf(expr, "( %s ) and ( %s )", filter->expr, filter2->expr);
     return new_filter(expr, filter->param, filter->optimize, filter->netmask);
 }
@@ -830,7 +847,7 @@ filter_not(self)
     char *expr;
 
     GetFilter(self, filter);
-    expr = ALLOCA_N(char, strlen(filter->expr) + 16); 
+    expr = ALLOCA_N(char, strlen(filter->expr) + 16);
     sprintf(expr, "not ( %s )", filter->expr);
     return new_filter(expr, filter->param, filter->optimize, filter->netmask);
 }
@@ -881,6 +898,7 @@ Init_pcap(void)
     rb_define_method(cCapture, "loop", capture_loop, -1);
     rb_define_method(cCapture, "each_packet", capture_loop, -1);
     rb_define_method(cCapture, "each", capture_loop, -1);
+    rb_define_method(cCapture, "fh", capture_fh, -1);
     rb_define_method(cCapture, "setfilter", capture_setfilter, -1);
     rb_define_method(cCapture, "datalink", capture_datalink, 0);
     rb_define_method(cCapture, "snapshot", capture_snapshot, 0);
